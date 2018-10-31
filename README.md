@@ -3,6 +3,7 @@
   
 # PowerAIWithDocker  
   
+### Overview  
 Reproducibility of Machine Learning (ML) model development and operationalization processes is a fundamental requirement for AI solutions in the cloud and on prem.    
     
 ML application development steps cover 4 fundamental stages: 
@@ -21,4 +22,55 @@ Azure Machine Learning Services (AML) Python SDK SDK allows one to address the M
   
 The other three ML app development stages (EO, SS) are not conceptually different than e13n and can also be based on docker images/ The o16n stage is fully covered by AML SDK, but docker is still critical for scoring script development before the Azure o16n flask app is created.  
    
+### Design  
 We provide an e2e workflow that shows how to create each of the above 4 docker images both within and outside AML Python SDK to create reproducible ML pipelines in Azure. We show both regular ML case (using simulated data and Kernel SVM to build a curved classification hyperplane) and deep learning using pretrained models for image classification using Keras/TF framework.  
+  
+We will use a Jupyter notebook running on the provisioned Azure DLVM to run the EO container (based on AML SDK) or to manually create the training docker image (outside SDK). Training docker image will run in a container on the same DLVM.  
+  
+We'll connect to it via a second Jupyter Notebook server, and we will develop the training script and train a deep learning model for image classification. The trained model and its associated scring script will then be deployed via a scoring docker image on an a [Azure Kubernetes Service (AKS)](https://azure.microsoft.com/en-us/services/kubernetes-service/) cluster.  
+  
+  
+### Prerequisites:
+ * Deply an [Azure Deep Learning Virtual Machines (DLVM)](http://aka.ms/dlvm)
+ * Open up ports for ssh, plus 2 Jupyter Notebook servers (one plain and the other one used for building the dockerized training and scoring scripts)
+ * Add disks or expand the current ones as needed (you will need several 100 GB to store data and images)
+ 
+* login (ssh) into the VM and create the project base directory structure:
+```python
+sudo mkdir -p /data/datadrive01
+sudo chmod -R ugo=rwx  /data/datadrive01/
+sudo mkdir -p /data/datadrive01/prj
+sudo mkdir -p /data/datadrive01/data
+sudo chmod -R ugo=rwx  /data/datadrive01/
+```
+* Login into dockerhub:
+```
+docker login
+```
+* [Get rid of sudo](https://docs.docker.com/install/linux/linux-postinstall/#manage-docker-as-a-non-root-user) in cli if you wish so:
+```
+sudo groupadd docker
+sudo usermod -aG docker $USER
+```
+* Update/install a few system libs:
+```
+sudo apt-get update
+pip install --upgrade pip
+sudo apt-get install tmux
+pip install -U python-dotenv
+```
+* Clone the project:
+```
+cd /data/datadrive01/prj/
+git clone https://github.com/georgeAccnt-GH/PowerAIWithDocker.git
+sudo chmod -R ugo=rwx  /data/datadrive01/
+```
+* The project code structure is shown below. 
+ 
+### Setup:
+
+### Cleaning up:
+
+### Contributing:
+
+ 
