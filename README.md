@@ -33,6 +33,7 @@ We'll connect to it via a second Jupyter Notebook server, and we will develop th
 ### Prerequisites:
  * Deply an [Azure Deep Learning Virtual Machines (DLVM)](http://aka.ms/dlvm)
  * Open up ports for ssh, plus 2 Jupyter Notebook servers (one plain and the other one used for building the dockerized training and scoring scripts)
+   __NOTE__: this si not a secure way to develop AI solutions. Securing access to VM and to the notebook server is paramount, but outside the scope of this tutorial. It is highly recommended to address the security issue before starting an AI development project.  
  * Add disks or expand the current ones as needed (you will need several 100 GB to store data and images)
  
 * login (ssh) into the VM and create the project base directory structure:
