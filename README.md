@@ -116,7 +116,9 @@ jupyter notebook --notebook-dir=$(pwd) --ip='*' --port=9000 --no-browser --allow
 [yourVM].eastus2.cloudapp.azure.com:9000 
 with the security token from the VM ssh session obtained as described above. E.g.:  [yourVM].eastus2.cloudapp.azure.com:9000/?token=eeb532b4481b8aa0dcee646c72f48a6dc162a38fb314be9d  
 
-* You are now ready to create the AML SDK docker file and its associated image. Before you run /amlsdk/createAMLSDKDocker.ipynb, make sure you save your dockerhub login info in first cell that starts with __%%writefile .env__. Then you can run the notebook.
+* You are now ready to create the AML SDK docker file and its associated image using /amlsdk/createAMLSDKDocker.ipynb.   
+Before you run the notebook, make sure you save your dockerhub login info in first cell that starts with __%%writefile .env__.   
+The notebook builds the AML SDK docker image after first creating the conda environment .yml file (aml_sdk_conda_dep_file.yml) that encapsulates the SDK sample notebooks dependencies and the SDK docker file (dockerfile_1.0.0).
 
 
  
