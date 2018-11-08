@@ -31,18 +31,28 @@ We'll connect to it via a second Jupyter Notebook server, and we will develop th
   
   
 ### Prerequisites:
- * Deply an [Azure Deep Learning Virtual Machines (DLVM)](http://aka.ms/dlvm)
- * Open up ports for ssh, plus 2 Jupyter Notebook servers (one plain and the other one used for building the dockerized training and scoring scripts)
-   __NOTE__: this si not a secure way to develop AI solutions. Securing access to VM and to the notebook server is paramount, but outside the scope of this tutorial. It is highly recommended to address the security issue before starting an AI development project.  
- * Add disks or expand the current ones as needed (you will need several 100 GB to store data and images)
+ * Deploy an [Azure Deep Learning Virtual Machines (DLVM)](http://aka.ms/dlvm)
+ * Open up ports for ssh, plus 2 Jupyter Notebook servers (one plain and the other one used for building the dockerized training and scoring scripts).  
+   __NOTE__: this is __NOT__ a secure way to develop AI solutions. Securing access to VM and to the notebook server is paramount, but outside the scope of this tutorial. It is highly recommended to address the security issue before starting an AI development project.  
+ * Add disks or expand the current ones as needed (you will need several 100 GB to store data and images). You can do this via portal or ps CLI:
+```
+# based on https://docs.microsoft.com/en-us/azure/machine-learning/preview/known-issues-and-troubleshooting-guide#vm-disk-is-full
+#Deallocate VM (stopping will not work)  
+$ az vm deallocate --resource-group myResourceGroup  --name myVM  
+# Update Disc Size  
+$ az disk update --resource-group myResourceGroup --name myVM --size-gb 250  
+# Start VM     
+$ az vm start --resource-group myResourceGroup  --name myVM  
+``` 
+
  
 * login (ssh) into the VM and create the project base directory structure:
 ```python
-sudo mkdir -p /data/datadrive01
-sudo chmod -R ugo=rwx  /data/datadrive01/
-sudo mkdir -p /data/datadrive01/prj
-sudo mkdir -p /data/datadrive01/data
-sudo chmod -R ugo=rwx  /data/datadrive01/
+sudo mkdir -p /datadrive01
+sudo chmod -R ugo=rwx  /datadrive01/
+sudo mkdir -p /datadrive01/prj
+sudo mkdir -p /datadrive01/data
+sudo chmod -R ugo=rwx  /datadrive01/
 ```
 * Login into dockerhub:
 ```
@@ -60,11 +70,11 @@ pip install --upgrade pip
 sudo apt-get install tmux
 pip install -U python-dotenv
 ```
-* Clone the project:
+* [Fork](https://guides.github.com/activities/forking/) the [project](https://github.com/georgeAccnt-GH/PowerAIWithDocker.git) then clone it to your working computer
 ```
-cd /data/datadrive01/prj/
-git clone https://github.com/georgeAccnt-GH/PowerAIWithDocker.git
-sudo chmod -R ugo=rwx  /data/datadrive01/
+cd /datadrive01/prj/
+git clone https://github.com/your_GitHub_account/PowerAIWithDocker.git
+sudo chmod -R ugo=rwx  /datadrive01/
 ```
 * The project code structure is shown below. 
  
