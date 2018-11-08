@@ -54,15 +54,18 @@ sudo mkdir -p /datadrive01/prj
 sudo mkdir -p /datadrive01/data
 sudo chmod -R ugo=rwx  /datadrive01/
 ```
-* Login into dockerhub:
+
+* Login into dockerhub (alternatively you can use an ACR, but that is not covered here):
 ```
 docker login
 ```
+
 * [Get rid of sudo](https://docs.docker.com/install/linux/linux-postinstall/#manage-docker-as-a-non-root-user) in cli if you wish so:
 ```
 sudo groupadd docker
 sudo usermod -aG docker $USER
 ```
+
 * Update/install a few system libs:
 ```
 sudo apt-get update
@@ -70,15 +73,53 @@ pip install --upgrade pip
 sudo apt-get install tmux
 pip install -U python-dotenv
 ```
+
 * [Fork](https://guides.github.com/activities/forking/) the [project](https://github.com/georgeAccnt-GH/PowerAIWithDocker.git) then clone it to your working computer
 ```
 cd /datadrive01/prj/
 git clone https://github.com/your_GitHub_account/PowerAIWithDocker.git
 sudo chmod -R ugo=rwx  /datadrive01/
 ```
+
 * The project code structure is shown below. 
+
+```
+ls -l ./
+total 16
+drwxrwxrwx 5 loginvm0011 loginvm0011 4096 Nov  8 17:45 amlsdk
+-rw-rw-r-- 1 loginvm0011 loginvm0011 1074 Nov  8 17:37 LICENSE
+-rw-rw-r-- 1 loginvm0011 loginvm0011 5357 Nov  8 17:37 README.md
+```
+ 
  
 ### Setup:
+1. Create the __EO__ docker file and its associate image
+
+* Launch jupyter server on the remote DLVM.  
+TMUX session commands are optional (to exit a tmux session type "CTRL+b", then "d").  
+You may change the port number (9000 below) to any other port you may have opened on the VM.   
+
+```
+tmux new -s jupyter_srvr
+# tmux attach-session -t jupyter_srvr
+jupyter notebook --notebook-dir=$(pwd) --ip='*' --port=9000 --no-browser --allow-root
+```
+
+* Once the Jupyter notebook server started, it should display the connection token like this:
+```
+   Copy/paste this URL into your browser when you connect for the first time,
+    to login with a token:
+        http://localhost:9000/?token=eeb532b4481b8aa0dcee646c72f48a6dc162a38fb314be9d
+```
+
+* You can then connect to the Jupyter notebook server by pointing your local Windows laptop browser to the link obtained by combining your vm FQDN and port:    
+[yourVM].eastus2.cloudapp.azure.com:9000 
+with the security token from the VM ssh session obtained as described above. E.g.:  [yourVM].eastus2.cloudapp.azure.com:9000/?token=eeb532b4481b8aa0dcee646c72f48a6dc162a38fb314be9d  
+
+* You are now ready to create the AML SDK docker file and its associated image. Before you run /amlsdk/createAMLSDKDocker.ipynb, make sure you save your dockerhub login info in first cell that starts with __%%writefile .env__. Then you can run the notebook.
+
+
+ 
 
 ### Cleaning up:
 
