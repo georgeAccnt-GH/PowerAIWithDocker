@@ -120,7 +120,29 @@ with the security token from the VM ssh session obtained as described above. E.g
 Before you run the notebook, make sure you save your dockerhub login info in first cell that starts with __%%writefile .env__.   
 The notebook builds the AML SDK docker image after first creating the conda environment .yml file (aml_sdk_conda_dep_file.yml) that encapsulates the SDK sample notebooks dependencies and the SDK docker file (dockerfile_1.0.0).
 
+* The notebook also prints the command that can be used to start the SDK docker image container:  
+docker run -it -p 9001:8888 -v /datadrive01/prj/PowerAIWithDocker/amlsdk/../:/workspace:rw georgedockeraccount/aml-sdk_docker:1.0.0 /bin/bash -c "source activate aml-sdk-conda-env && jupyter notebook --notebook-dir=/workspace --ip=* --port=8888 --no-browser --allow-root "  
+This mounts local project directory (/datadrive01/prj/PowerAIWithDocker/amlsdk/../) on the host VM to /workspace directory inside the container, All files tha exist on the host will be accessible inside the container, and all files written inside the container to /workspace directory will be available on the host VM during and after container existence.  
+The jupiter notebook running isndie the container listens to port 8888, which gets mapped to port 9001 on the host VM. These port should match the one opened on the VM using the portal.
+You can run the commands below in a ssh window connected to your VM (as before, TMUX session commands are optional):  
+```
+tmux new -s jupyter_docker_srvr 
+#tmux attach-session -t jupyter_docker_srvr
+docker run -it -p 9001:8888 -v /datadrive01/prj/PowerAIWithDocker/amlsdk/../:/workspace:rw georgedockeraccount/aml-sdk_docker:1.0.0 /bin/bash -c "source activate aml-sdk-conda-env && jupyter notebook --notebook-dir=/workspace --ip=* --port=8888 --no-browser --allow-root"
+```
 
+* Once the Jupyter notebook server running inside the AML SDK containerr started, it should display the connection token like this:
+```
+    Copy/paste this URL into your browser when you connect for the first time,
+    to login with a token:
+        http://(2e0167c612fe or 127.0.0.1):8888/?token=cb9336bf029a76c1bef4b5d1b2576475ceb7ed93e0b4047c
+```
+
+* You can then connect to the Jupyter notebook server running inside the AML SDK container by pointing your local Windows laptop browser to the link obtained by combining your vm FQDN and port:    
+[yourVM].eastus2.cloudapp.azure.com:9001 
+with the security token from the VM ssh session obtained as described above. E.g.:  [yourVM].eastus2.cloudapp.azure.com:9001/?token=cb9336bf029a76c1bef4b5d1b2576475ceb7ed93e0b4047c  
+
+* You now have two Jupyter notebook server sessions running on the same VM, on under the host os, and the other in the AML SDK container. Both sessions point to the same directory and results files from each session should be visible inside the other. Obviously we will not run same notebook file in both sessions. In your windows laptop browser, the container session is using port 9001, while the host OS session uses port 9000.
  
 
 ### Cleaning up:
