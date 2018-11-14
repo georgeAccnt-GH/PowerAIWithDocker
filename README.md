@@ -26,12 +26,15 @@ We provide an e2e workflow that shows how to create each of the above 4 docker i
    
 ### Design  
 
-We will use a Jupyter notebook running on the provisioned Azure DLVM to create the o11n image (based on AML SDK) or to manually create the training/e13n docker image (outside SDK).  
+o11n: We will use a Jupyter notebook running on the provisioned Azure DLVM to create the o11n image (based on AML SDK) or to manually create the training/e13n docker image (outside SDK).  
   
-Training/e13n docker container will run in a container on the same (DL)VM:   
+e13n: Training/e13n docker container will run in a container on the same (DL)VM:   
 * In the AMDL SDK based approach, we use to the o11n container to explicitly define the e13n docker components (base docker image, dependencies defined via a conda environment .yml file, and scoring script) and will let the SDK to implictily build the e13n docker image and run its scontainer on remote compute context (which we choose to be the same VM running the the 011n container).  
 * Outside SDK we'll connect to it via a second Jupyter Notebook server, and we will develop the training script and train a deep learning model for image classification. The trained model and its associated scring script will then be deployed via a scoring docker image on an a [Azure Kubernetes Service (AKS)](https://azure.microsoft.com/en-us/services/kubernetes-service/) cluster.  
   
+SS: _coming_  
+  
+o16n: _coming_ . One can manually (explicitly) build the flask app, or use AML SDK api to reate the flask app and deploy to using ACI for testing or AKS for a full scalable solution.   
   
 ### Prerequisites:
  * Deploy an [Azure Deep Learning Virtual Machines (DLVM)](http://aka.ms/dlvm). Other Linux VMs (including DSVMs) will also work provided they have docker and JUpyter notebook installed. Consider using a [GPU](https://docs.microsoft.com/en-us/azure/virtual-machines/windows/sizes-gpu) enabled VM for compute intensive tasks like training deep learning models.
