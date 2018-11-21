@@ -6,7 +6,7 @@
 ### Overview  
 Reproducibility of Machine Learning (ML) model development and operationalization processes is a fundamental requirement for AI solutions in the cloud and on prem.    
     
-ML application development steps cover 4 fundamental stages: 
+ML application development steps cover 4 fundamental [stages](https://user-images.githubusercontent.com/16708375/48814903-90d2f380-ed0a-11e8-8f4e-928171dea7dc.png): 
  * orchestration (o11n)  
  * running ML model training experiments (e13n)
  * ML scoring script development (SS)
