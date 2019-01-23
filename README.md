@@ -67,6 +67,12 @@ sudo chmod -R ugo=rwx  /datadrive01/
 ```
 docker login
 ```
+Note: you may have to use:
+```
+sudo adduser <your_login_name> docker
+```
+to add your user to the dcker grup in case you have write access issues to docker files.  
+
 
 * [Get rid of sudo](https://docs.docker.com/install/linux/linux-postinstall/#manage-docker-as-a-non-root-user) in cli if you wish so:
 ```
@@ -92,6 +98,7 @@ sudo chmod -R ugo=rwx  /datadrive01/
 * The project code structure is shown below. 
 
 ```
+cd ./PowerAIWithDocker/
 ls -l ./
 total 16
 drwxrwxrwx 5 loginvm0011 loginvm0011 4096 Nov  8 17:45 amlsdk
