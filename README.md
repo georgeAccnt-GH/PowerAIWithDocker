@@ -37,12 +37,16 @@ SS: _coming_
 o16n: _coming_ . One can manually (explicitly) build the flask app, or use AML SDK api to reate the flask app and deploy to using ACI for testing or AKS for a full scalable solution.   
   
 ### Prerequisites:
- * Deploy an [Azure Deep Learning Virtual Machines (DLVM)](http://aka.ms/dlvm). Other Linux VMs (including DSVMs) will also work provided they have docker and JUpyter notebook installed. Consider using a [GPU](https://docs.microsoft.com/en-us/azure/virtual-machines/windows/sizes-gpu) enabled VM for compute intensive tasks like training deep learning models.
+ * Deploy an [Azure Data Science Virtual Machines (DSVM)](http://aka.ms/dsvm). Other Linux VMs will also work provided they have docker and JUpyter notebook installed. Consider using a [GPU](https://docs.microsoft.com/en-us/azure/virtual-machines/windows/sizes-gpu) enabled VM for compute intensive tasks like training deep learning models. Here are the cli commands to deploy a large sized disk DSVM:  
+```
+az group create --name some_rsg --location eastus  
+az vm create -n some_vm -g some_rsg --image microsoft-dsvm:linux-data-science-vm-ubuntu:linuxdsvmubuntu:latest  --admin-password some_l0ng_l00ng_PWD --admin-username some_login_name --size Standard_NC12s_v2 --public-ip-address-dns-name some_vm --os-disk-size-gb 300  
+```
  
- * Open up 4 ports: two for [ssh](https://github.com/Azure/ViennaDocs/blob/archived-daily-do-no-use/documentation/sdk/ssh-issue.md), plus two for Jupyter Notebook servers (one plain and the other one run isndie the AML SDK container and used used for building the dockerized training and scoring scripts).  
+ * Open up 4 ports: two for [ssh](https://github.com/Azure/ViennaDocs/blob/archived-daily-do-no-use/documentation/sdk/ssh-issue.md), plus two for Jupyter Notebook servers (one plain and the other one run inside the AML SDK container and used used for building the dockerized training and scoring scripts).  
    __NOTE__: this is __NOT__ a secure way to develop AI solutions. Securing access to VM and to the notebook server is paramount, but outside the scope of this tutorial. It is highly recommended to address the security issue before starting an AI development project.  
    
- * Add disks or expand the current ones as needed (you usually need several 100 GBs to store data and images for deep learning models).  You can do this via portal or ps CLI:
+ * If you used the portal to deploy the VM with default sized disks, you can add disks or expand the current ones as needed (you usually need several 100 GBs to store data and images for deep learning models).  You can do this via portal or ps CLI:
 ```
 # based on https://docs.microsoft.com/en-us/azure/machine-learning/preview/known-issues-and-troubleshooting-guide#vm-disk-is-full
 #Deallocate VM (stopping will not work)  
