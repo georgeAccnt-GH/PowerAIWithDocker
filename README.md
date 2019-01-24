@@ -71,7 +71,7 @@ Note: you may have to use:
 ```
 sudo adduser <your_login_name> docker
 ```
-to add your user to the dcker grup in case you have write access issues to docker files.  
+to add your user to the docker grup in case you have write access issues to docker files.  
 
 
 * [Get rid of sudo](https://docs.docker.com/install/linux/linux-postinstall/#manage-docker-as-a-non-root-user) in cli if you wish so:
