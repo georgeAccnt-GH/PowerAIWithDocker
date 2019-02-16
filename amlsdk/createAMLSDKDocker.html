@@ -11783,17 +11783,21 @@ div#notebook {
 </div>
 <div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<p>To run this notebook, start it via a plain Jupyter notebook session</p>
+<p>To run this notebook, start it via a plain Jupyter notebook session on your Ubuntu_Azure_VM:</p>
 <ul>
 <li>login (ssh) into the VM:
-<pre><code>loginvm0011@ghiordanXRgpuvm:/datadrive01/prj/regularR_Realtime$ jupyter notebook --notebook-dir=$(pwd) --ip='*' --port=9000 --no-browser --allow-root</code></pre>
+<pre><code>loginname1@Ubuntu_Azure_VM:/datadrive01/prj/regularR_Realtime$ jupyter notebook --notebook-dir=$(pwd) --ip='*' --port=9000 --no-browser --allow-root</code></pre>
 </li>
 </ul>
 <ul>
 <li>then go to:<br>
-<a href="http://ghiordanxrgpuvm.eastus2.cloudapp.azure.com:9000/">http://ghiordanxrgpuvm.eastus2.cloudapp.azure.com:9000/</a> </li>
+<a href="http://Ubuntu_Azure_VM.eastus2.cloudapp.azure.com:9000/">http://Ubuntu_Azure_VM.eastus2.cloudapp.azure.com:9000/</a> </li>
 </ul>
-<p>Note: continuumio/miniconda3:4.5.4 is the latest tag as of 9/7/2018</p>
+<p>Note: As of 02/13/2019, latest versions are:<br>
+Python 3.7.2 (<a href="https://www.python.org/downloads/">https://www.python.org/downloads/</a>, <a href="https://anaconda.org/anaconda/python">https://anaconda.org/anaconda/python</a>)<br>
+miniconda3 4.5.12 (<a href="https://hub.docker.com/r/continuumio/miniconda3/tags">https://hub.docker.com/r/continuumio/miniconda3/tags</a>)<br>
+AML SDK  v.1.0.15 (<a href="https://docs.microsoft.com/en-us/python/api/overview/azure/ml/install?view=azure-ml-py">https://docs.microsoft.com/en-us/python/api/overview/azure/ml/install?view=azure-ml-py</a>)<br>
+Ubuntu 19.04 (<a href="https://hub.docker.com/_/ubuntu?tab=tags">https://hub.docker.com/_/ubuntu?tab=tags</a>)</p>
 
 </div>
 </div>
@@ -11837,8 +11841,8 @@ div#notebook {
 
 # Your docker login and image repository name
 docker_login = &#39;georgedockeraccount&#39;
-image_tag = &quot;/aml-sdk_docker&quot;
-image_version = &#39;sdk.v.1.0.8&#39;
+image_tag = &quot;aml-sdk_docker_image&quot;
+image_version = &#39;sdk.v.1.0.15&#39;
 </pre></div>
 
 </div>
@@ -11855,7 +11859,7 @@ image_version = &#39;sdk.v.1.0.8&#39;
 
 
 <div class="output_subarea output_stream output_stdout output_text">
-<pre>Writing .env
+<pre>Overwriting .env
 </pre>
 </div>
 </div>
@@ -11874,7 +11878,7 @@ image_version = &#39;sdk.v.1.0.8&#39;
 <span class="n">conda_dependency_file</span> <span class="o">=</span> <span class="s1">&#39;aml_sdk_conda_dep_file.yml&#39;</span>
 
 <span class="kn">import</span> <span class="nn">os</span>
-<span class="n">docker_file_name</span> <span class="o">=</span> <span class="s1">&#39;dockerfile&#39;</span><span class="o">+</span> <span class="s1">&#39;_&#39;</span> <span class="o">+</span> <span class="n">os</span><span class="o">.</span><span class="n">getenv</span><span class="p">(</span><span class="s1">&#39;image_version&#39;</span><span class="p">)</span>
+<span class="n">docker_file_name</span> <span class="o">=</span> <span class="s1">&#39;dockerfile&#39;</span><span class="o">+</span> <span class="s1">&#39;_&#39;</span> <span class="o">+</span> <span class="n">os</span><span class="o">.</span><span class="n">getenv</span><span class="p">(</span><span class="s1">&#39;image_tag&#39;</span><span class="p">)</span> <span class="o">+</span> <span class="s1">&#39;_&#39;</span> <span class="o">+</span> <span class="n">os</span><span class="o">.</span><span class="n">getenv</span><span class="p">(</span><span class="s1">&#39;image_version&#39;</span><span class="p">)</span>
 </pre></div>
 
 </div>
@@ -11932,7 +11936,7 @@ image_version = &#39;sdk.v.1.0.8&#39;
 
 
 <div class="output_text output_subarea output_execute_result">
-<pre>&#39;/datadrive01/prj/PowerAIWithDocker/amlsdk/docker/dockerfile_sdk.v.1.0.8&#39;</pre>
+<pre>&#39;/datadrive01/prj/PowerAIWithDocker/amlsdk/docker/dockerfile_aml-sdk_docker_image_sdk.v.1.0.15&#39;</pre>
 </div>
 
 </div>
@@ -11976,15 +11980,15 @@ name: aml_sdk_conda_env02
 channels:
   - anaconda
 dependencies:
-  - python=3.6 
+  - python=3.6 # 3.6 req by tf, which seems to be req by automl, not 3.7.2 
   - numpy
   - cython
-  - notebook=5.6.0 
+  - notebook 
   - nb_conda
   - scikit-learn
   - pip:
     - python-dotenv
-#  - azureml-sdk[notebooks,automl]
+    - azureml-sdk[notebooks,automl,explain] 
 </pre></div>
 
 </div>
@@ -12015,97 +12019,31 @@ dependencies:
 <div class="prompt input_prompt">In&nbsp;[7]:</div>
 <div class="inner_cell">
     <div class="input_area">
-<div class=" highlight hl-ipython3"><pre><span></span><span class="c1"># %%writefile $docker_file_path </span>
-
-<span class="c1"># FROM debian:latest</span>
-<span class="c1"># MAINTAINER George Iordanescu &lt;ghiordan@microsoft.com&gt;</span>
-<span class="c1"># # https://hub.docker.com/r/continuumio/miniconda3/~/dockerfile/</span>
-
-<span class="c1"># ENV LANG=C.UTF-8 LC_ALL=C.UTF-8</span>
-<span class="c1"># ENV PATH /opt/conda/bin:$PATH</span>
-
-<span class="c1"># RUN apt-get update --fix-missing &amp;&amp; apt-get install -y --no-install-recommends \</span>
-<span class="c1">#     wget bzip2 ca-certificates curl git &amp;&amp; \</span>
-<span class="c1">#     apt-get clean &amp;&amp; \</span>
-<span class="c1">#     rm -rf /var/lib/apt/lists/*</span>
-    
-<span class="c1"># # # Install Azure CLI</span>
-<span class="c1"># # RUN echo &quot;deb [arch=amd64] https://packages.microsoft.com/repos/azure-cli/ xenial main&quot; | \</span>
-<span class="c1"># #     tee /etc/apt/sources.list.d/azure-cli.list &amp;&amp; \</span>
-<span class="c1"># #     curl -L https://packages.microsoft.com/keys/microsoft.asc | apt-key add - &amp;&amp; \</span>
-<span class="c1"># #     apt-get update &amp;&amp; \</span>
-<span class="c1"># #     apt-get install -y --no-install-recommends \</span>
-<span class="c1"># #     azure-cli</span>
-
-
-<span class="c1"># ADD aml_sdk_conda_dep_file.yml /tmp/aml_sdk_conda_dep_file.yml</span>
-
-<span class="c1"># ENV CONDA_ENV_NAME aml-sdk-conda-env</span>
-
-<span class="c1"># # RUN curl -o ~/miniconda.sh -O  https://repo.continuum.io/miniconda/Miniconda3-latest-Linux-x86_64.sh  &amp;&amp; \</span>
-<span class="c1"># RUN wget --quiet https://repo.anaconda.com/miniconda/Miniconda3-4.5.11-Linux-x86_64.sh -O ~/miniconda.sh &amp;&amp; \</span>
-<span class="c1">#     chmod +x ~/miniconda.sh &amp;&amp; \</span>
-<span class="c1">#     ~/miniconda.sh -b -p /opt/conda &amp;&amp; \</span>
-<span class="c1">#     rm ~/miniconda.sh </span>
-    
-<span class="c1"># RUN  conda env create -q --name $CONDA_ENV_NAME -f /tmp/aml_sdk_conda_dep_file.yml &amp;&amp; \</span>
-<span class="c1">#     conda clean --yes --all</span>
-<span class="c1"># ENV PATH /opt/conda/envs/$CONDA_ENV_NAME/bin:$PATH</span>
-
-<span class="c1"># RUN [ &quot;/bin/bash&quot;,&quot;-c&quot;,&quot;source activate aml-sdk-conda-env &amp;&amp; pip install azureml-sdk[notebooks]&quot;]    </span>
-<span class="c1"># # install and enable experiment widget</span>
-<span class="c1"># # https://docs.microsoft.com/en-us/azure/machine-learning/service/how-to-configure-environment</span>
-<span class="c1"># RUN [&quot;/bin/bash&quot;,&quot;-c&quot;,&quot;source activate aml-sdk-conda-env &amp;&amp; \</span>
-<span class="c1">#                     jupyter nbextension install --py --user azureml.train.widgets  &amp;&amp; \</span>
-<span class="c1">#                     jupyter nbextension enable --py --user azureml.train.widgets&quot;]</span>
-
-<span class="c1"># WORKDIR /workspace</span>
-
-<span class="c1"># CMD [ &quot;/bin/bash&quot; ]</span>
-</pre></div>
-
-</div>
-</div>
-</div>
-
-</div>
-<div class="cell border-box-sizing code_cell rendered">
-<div class="input">
-<div class="prompt input_prompt">In&nbsp;[8]:</div>
-<div class="inner_cell">
-    <div class="input_area">
 <div class=" highlight hl-ipython3"><pre><span></span><span class="o">%%</span><span class="k">writefile</span> $docker_file_path 
 
-FROM continuumio/miniconda3:4.5.11
+FROM continuumio/miniconda3:4.5.12
 MAINTAINER George Iordanescu &lt;ghiordan@microsoft.com&gt;
 
+# basic system packages, plus gcc
 RUN apt-get update --fix-missing &amp;&amp; apt-get install -y --no-install-recommends \
-    wget curl  \
-    git &amp;&amp; \ 
+    gcc g++ \
+    wget bzip2 ca-certificates curl git &amp;&amp; \
     apt-get clean &amp;&amp; \
     rm -rf /var/lib/apt/lists/*
-    
+
 ADD aml_sdk_conda_dep_file.yml /tmp/aml_sdk_conda_dep_file.yml
+ENV CONDA_DIR /opt/conda
+ENV CONDA_ENV_NAME aml-sdk-conda-env    
 
-ENV CONDA_ENV_NAME aml-sdk-conda-env
+# reate aml sdk conda env defined by .yml file
+RUN /opt/conda/bin/conda env create -q --name $CONDA_ENV_NAME -f /tmp/aml_sdk_conda_dep_file.yml &amp;&amp; \
+    /opt/conda/bin/conda clean  --yes --all 
+ENV CONDA_AUTO_UPDATE_CONDA=false
+ENV CONDA_DEFAULT_ENV=$CONDA_ENV_NAME
+ENV CONDA_PREFIX=$CONDA_DIR/envs/$CONDA_DEFAULT_ENV
+ENV PATH=$CONDA_PREFIX/bin:/opt/conda/bin:$PATH         
 
-RUN  conda env create -q --name $CONDA_ENV_NAME -f /tmp/aml_sdk_conda_dep_file.yml &amp;&amp; \
-    conda clean --yes --all
-ENV PATH /opt/conda/envs/$CONDA_ENV_NAME/bin:$PATH
-
-#unclear if I can run pip from $CONDA_ENV_NAME env, but     
-RUN [ &quot;/bin/bash&quot;,&quot;-c&quot;,&quot;source activate aml-sdk-conda-env &amp;&amp; pip install azureml-sdk[notebooks,automl] azureml-dataprep&quot;] 
-
-# install and enable experiment widget
-# https://docs.microsoft.com/en-us/azure/machine-learning/service/how-to-configure-environment
-RUN [ &quot;/bin/bash&quot;,&quot;-c&quot;,&quot;source activate aml-sdk-conda-env &amp;&amp; \
-                        jupyter nbextension install --py --user azureml.widgets  &amp;&amp; \
-                        jupyter nbextension enable --py --user azureml.widgets&quot;]
-
-# RUN [ &quot;/bin/bash&quot;,&quot;-c&quot;,&quot;source activate aml-sdk-conda-env &amp;&amp; \
-#                         mkdir -p /workspace&quot;]
-
-CMD [ &quot;/bin/bash&quot;,&quot;-c&quot;,&quot;source activate aml-sdk-conda-env&quot;]
+CMD /bin/bash
 </pre></div>
 
 </div>
@@ -12122,7 +12060,7 @@ CMD [ &quot;/bin/bash&quot;,&quot;-c&quot;,&quot;source activate aml-sdk-conda-e
 
 
 <div class="output_subarea output_stream output_stdout output_text">
-<pre>Writing /datadrive01/prj/PowerAIWithDocker/amlsdk/docker/dockerfile_sdk.v.1.0.8
+<pre>Writing /datadrive01/prj/PowerAIWithDocker/amlsdk/docker/dockerfile_aml-sdk_docker_image_sdk.v.1.0.15
 </pre>
 </div>
 </div>
@@ -12133,7 +12071,7 @@ CMD [ &quot;/bin/bash&quot;,&quot;-c&quot;,&quot;source activate aml-sdk-conda-e
 </div>
 <div class="cell border-box-sizing code_cell rendered">
 <div class="input">
-<div class="prompt input_prompt">In&nbsp;[9]:</div>
+<div class="prompt input_prompt">In&nbsp;[8]:</div>
 <div class="inner_cell">
     <div class="input_area">
 <div class=" highlight hl-ipython3"><pre><span></span><span class="o">%</span><span class="k">dotenv</span>
@@ -12143,7 +12081,7 @@ CMD [ &quot;/bin/bash&quot;,&quot;-c&quot;,&quot;source activate aml-sdk-conda-e
 <span class="k">if</span> <span class="n">image_version_string</span><span class="o">!=</span><span class="s2">&quot;&quot;</span><span class="p">:</span>
     <span class="n">image_version_string</span> <span class="o">=</span> <span class="s1">&#39;:&#39;</span>  <span class="o">+</span> <span class="n">image_version_string</span>
     
-<span class="n">docker_image_name</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">getenv</span><span class="p">(</span><span class="s1">&#39;docker_login&#39;</span><span class="p">)</span> <span class="o">+</span> <span class="n">os</span><span class="o">.</span><span class="n">getenv</span><span class="p">(</span><span class="s1">&#39;image_tag&#39;</span><span class="p">)</span> <span class="o">+</span> <span class="n">image_version_string</span>
+<span class="n">docker_image_name</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">getenv</span><span class="p">(</span><span class="s1">&#39;docker_login&#39;</span><span class="p">)</span> <span class="o">+</span> <span class="s1">&#39;/&#39;</span> <span class="o">+</span> <span class="n">os</span><span class="o">.</span><span class="n">getenv</span><span class="p">(</span><span class="s1">&#39;image_tag&#39;</span><span class="p">)</span> <span class="o">+</span> <span class="n">image_version_string</span>
 
 
 <span class="n">docker_file_path</span>
@@ -12164,33 +12102,33 @@ CMD [ &quot;/bin/bash&quot;,&quot;-c&quot;,&quot;source activate aml-sdk-conda-e
 
 <div class="output_area">
 
-<div class="prompt output_prompt">Out[9]:</div>
+<div class="prompt output_prompt">Out[8]:</div>
 
 
 
 
 <div class="output_text output_subarea output_execute_result">
-<pre>&#39;/datadrive01/prj/PowerAIWithDocker/amlsdk/docker/dockerfile_sdk.v.1.0.8&#39;</pre>
+<pre>&#39;/datadrive01/prj/PowerAIWithDocker/amlsdk/docker/dockerfile_aml-sdk_docker_image_sdk.v.1.0.15&#39;</pre>
 </div>
 
 </div>
 
 <div class="output_area">
 
-<div class="prompt output_prompt">Out[9]:</div>
+<div class="prompt output_prompt">Out[8]:</div>
 
 
 
 
 <div class="output_text output_subarea output_execute_result">
-<pre>&#39;georgedockeraccount/aml-sdk_docker:sdk.v.1.0.8&#39;</pre>
+<pre>&#39;georgedockeraccount/aml-sdk_docker_image:sdk.v.1.0.15&#39;</pre>
 </div>
 
 </div>
 
 <div class="output_area">
 
-<div class="prompt output_prompt">Out[9]:</div>
+<div class="prompt output_prompt">Out[8]:</div>
 
 
 
@@ -12208,8 +12146,8 @@ CMD [ &quot;/bin/bash&quot;,&quot;-c&quot;,&quot;source activate aml-sdk-conda-e
 
 <div class="output_subarea output_stream output_stdout output_text">
 <pre>total 8
--rw-rw-r-- 1 loginvm001 loginvm001  218 Jan 23 19:53 aml_sdk_conda_dep_file.yml
--rw-rw-r-- 1 loginvm001 loginvm001 1256 Jan 23 19:53 dockerfile_sdk.v.1.0.8
+-rw-rw-r-- 1 loginvm001 loginvm001 282 Feb 16 01:07 aml_sdk_conda_dep_file.yml
+-rw-rw-r-- 1 loginvm001 loginvm001 840 Feb 16 01:07 dockerfile_aml-sdk_docker_image_sdk.v.1.0.15
 </pre>
 </div>
 </div>
@@ -12220,7 +12158,7 @@ CMD [ &quot;/bin/bash&quot;,&quot;-c&quot;,&quot;source activate aml-sdk-conda-e
 </div>
 <div class="cell border-box-sizing code_cell rendered">
 <div class="input">
-<div class="prompt input_prompt">In&nbsp;[&nbsp;]:</div>
+<div class="prompt input_prompt">In&nbsp;[9]:</div>
 <div class="inner_cell">
     <div class="input_area">
 <div class=" highlight hl-ipython3"><pre><span></span><span class="o">!</span><span class="nb">echo</span> docker build -t <span class="nv">$docker_image_name</span> -f <span class="nv">$docker_file_path</span> <span class="nv">$working_path</span> --no-cache
@@ -12241,64 +12179,219 @@ CMD [ &quot;/bin/bash&quot;,&quot;-c&quot;,&quot;source activate aml-sdk-conda-e
 
 
 <div class="output_subarea output_stream output_stdout output_text">
-<pre>docker build -t georgedockeraccount/aml-sdk_docker:sdk.v.1.0.8 -f /datadrive01/prj/PowerAIWithDocker/amlsdk/docker/dockerfile_sdk.v.1.0.8 /datadrive01/prj/PowerAIWithDocker/amlsdk/docker --no-cache
-Sending build context to Docker daemon  4.096kB
-Step 1/10 : FROM continuumio/miniconda3:4.5.11
- ---&gt; d3c252f8727b
-Step 2/10 : MAINTAINER George Iordanescu &lt;ghiordan@microsoft.com&gt;
- ---&gt; Running in 563f89a59eec
-Removing intermediate container 563f89a59eec
- ---&gt; 05307ca074a8
-Step 3/10 : RUN apt-get update --fix-missing &amp;&amp; apt-get install -y --no-install-recommends     wget curl      git &amp;&amp;     apt-get clean &amp;&amp;     rm -rf /var/lib/apt/lists/*
- ---&gt; Running in 56f16dece378
+<pre>docker build -t georgedockeraccount/aml-sdk_docker_image:sdk.v.1.0.15 -f /datadrive01/prj/PowerAIWithDocker/amlsdk/docker/dockerfile_aml-sdk_docker_image_sdk.v.1.0.15 /datadrive01/prj/PowerAIWithDocker/amlsdk/docker --no-cache
+Sending build context to Docker daemon  3.584kB
+Step 1/12 : FROM continuumio/miniconda3:4.5.12
+ ---&gt; ae46c364060f
+Step 2/12 : MAINTAINER George Iordanescu &lt;ghiordan@microsoft.com&gt;
+ ---&gt; Running in d0f8322b17ba
+Removing intermediate container d0f8322b17ba
+ ---&gt; ead0d979caff
+Step 3/12 : RUN apt-get update --fix-missing &amp;&amp; apt-get install -y --no-install-recommends     gcc g++     wget bzip2 ca-certificates curl git &amp;&amp;     apt-get clean &amp;&amp;     rm -rf /var/lib/apt/lists/*
+ ---&gt; Running in 0f9efacfab55
 Ign:1 http://deb.debian.org/debian stretch InRelease
-Get:2 http://deb.debian.org/debian stretch-updates InRelease [91.0 kB]
-Get:3 http://deb.debian.org/debian stretch Release [118 kB]
-Get:4 http://deb.debian.org/debian stretch Release.gpg [2434 B]
-Get:5 http://security.debian.org/debian-security stretch/updates InRelease [94.3 kB]
-Get:6 http://deb.debian.org/debian stretch-updates/main amd64 Packages [5152 B]
-Get:7 http://deb.debian.org/debian stretch/main amd64 Packages [7090 kB]
-Get:8 http://security.debian.org/debian-security stretch/updates/main amd64 Packages [469 kB]
-Fetched 7869 kB in 1s (5054 kB/s)
+Get:2 http://security.debian.org/debian-security stretch/updates InRelease [94.3 kB]
+Get:3 http://deb.debian.org/debian stretch-updates InRelease [91.0 kB]
+Get:4 http://deb.debian.org/debian stretch Release [118 kB]
+Get:5 http://deb.debian.org/debian stretch Release.gpg [2434 B]
+Get:6 http://security.debian.org/debian-security stretch/updates/main amd64 Packages [475 kB]
+Get:7 http://deb.debian.org/debian stretch-updates/main amd64 Packages [7748 B]
+Get:8 http://deb.debian.org/debian stretch/main amd64 Packages [7090 kB]
+Fetched 7878 kB in 1s (6651 kB/s)
 Reading package lists...
 Reading package lists...
 Building dependency tree...
 Reading state information...
+bzip2 is already the newest version (1.0.6-8.1).
+ca-certificates is already the newest version (20161130+nmu1+deb9u1).
 wget is already the newest version (1.18-5+deb9u2).
+The following additional packages will be installed:
+  binutils cpp cpp-6 g++-6 gcc-6 libasan3 libatomic1 libc-dev-bin libc6-dev
+  libcc1-0 libcilkrts5 libcurl3 libgcc-6-dev libgomp1 libisl15 libitm1
+  liblsan0 libmpc3 libmpfr4 libmpx2 libquadmath0 libstdc++-6-dev libtsan0
+  libubsan0 linux-libc-dev
 Suggested packages:
-  gettext-base git-daemon-run | git-daemon-sysvinit git-doc git-el git-email
-  git-gui gitk gitweb git-arch git-cvs git-mediawiki git-svn
+  binutils-doc cpp-doc gcc-6-locales g++-multilib g++-6-multilib gcc-6-doc
+  libstdc++6-6-dbg gcc-multilib make manpages-dev autoconf automake libtool
+  flex bison gdb gcc-doc gcc-6-multilib libgcc1-dbg libgomp1-dbg libitm1-dbg
+  libatomic1-dbg libasan3-dbg liblsan0-dbg libtsan0-dbg libubsan0-dbg
+  libcilkrts5-dbg libmpx2-dbg libquadmath0-dbg gettext-base git-daemon-run
+  | git-daemon-sysvinit git-doc git-el git-email git-gui gitk gitweb git-arch
+  git-cvs git-mediawiki git-svn glibc-doc libstdc++-6-doc
+Recommended packages:
+  manpages manpages-dev
+The following NEW packages will be installed:
+  binutils cpp cpp-6 g++ g++-6 gcc gcc-6 libasan3 libatomic1 libc-dev-bin
+  libc6-dev libcc1-0 libcilkrts5 libgcc-6-dev libgomp1 libisl15 libitm1
+  liblsan0 libmpc3 libmpfr4 libmpx2 libquadmath0 libstdc++-6-dev libtsan0
+  libubsan0 linux-libc-dev
 The following packages will be upgraded:
   curl git libcurl3
-3 upgraded, 0 newly installed, 0 to remove and 20 not upgraded.
-Need to get 4686 kB of archives.
-After this operation, 13.3 kB of additional disk space will be used.
-Get:1 http://deb.debian.org/debian stretch/main amd64 git amd64 1:2.11.0-3+deb9u4 [4167 kB]
-Get:2 http://deb.debian.org/debian stretch/main amd64 curl amd64 7.52.1-5+deb9u8 [228 kB]
-Get:3 http://deb.debian.org/debian stretch/main amd64 libcurl3 amd64 7.52.1-5+deb9u8 [292 kB]
+3 upgraded, 26 newly installed, 0 to remove and 21 not upgraded.
+Need to get 39.0 MB of archives.
+After this operation, 153 MB of additional disk space will be used.
+Get:1 http://security.debian.org/debian-security stretch/updates/main amd64 curl amd64 7.52.1-5+deb9u9 [227 kB]
+Get:2 http://deb.debian.org/debian stretch/main amd64 git amd64 1:2.11.0-3+deb9u4 [4167 kB]
+Get:3 http://security.debian.org/debian-security stretch/updates/main amd64 libcurl3 amd64 7.52.1-5+deb9u9 [292 kB]
+Get:4 http://deb.debian.org/debian stretch/main amd64 binutils amd64 2.28-5 [3770 kB]
+Get:5 http://deb.debian.org/debian stretch/main amd64 libisl15 amd64 0.18-1 [564 kB]
+Get:6 http://deb.debian.org/debian stretch/main amd64 libmpfr4 amd64 3.1.5-1 [556 kB]
+Get:7 http://deb.debian.org/debian stretch/main amd64 libmpc3 amd64 1.0.3-1+b2 [39.9 kB]
+Get:8 http://deb.debian.org/debian stretch/main amd64 cpp-6 amd64 6.3.0-18+deb9u1 [6584 kB]
+Get:9 http://deb.debian.org/debian stretch/main amd64 cpp amd64 4:6.3.0-4 [18.7 kB]
+Get:10 http://deb.debian.org/debian stretch/main amd64 libcc1-0 amd64 6.3.0-18+deb9u1 [30.6 kB]
+Get:11 http://deb.debian.org/debian stretch/main amd64 libgomp1 amd64 6.3.0-18+deb9u1 [73.3 kB]
+Get:12 http://deb.debian.org/debian stretch/main amd64 libitm1 amd64 6.3.0-18+deb9u1 [27.3 kB]
+Get:13 http://deb.debian.org/debian stretch/main amd64 libatomic1 amd64 6.3.0-18+deb9u1 [8966 B]
+Get:14 http://deb.debian.org/debian stretch/main amd64 libasan3 amd64 6.3.0-18+deb9u1 [311 kB]
+Get:15 http://deb.debian.org/debian stretch/main amd64 liblsan0 amd64 6.3.0-18+deb9u1 [115 kB]
+Get:16 http://deb.debian.org/debian stretch/main amd64 libtsan0 amd64 6.3.0-18+deb9u1 [257 kB]
+Get:17 http://deb.debian.org/debian stretch/main amd64 libubsan0 amd64 6.3.0-18+deb9u1 [107 kB]
+Get:18 http://deb.debian.org/debian stretch/main amd64 libcilkrts5 amd64 6.3.0-18+deb9u1 [40.5 kB]
+Get:19 http://deb.debian.org/debian stretch/main amd64 libmpx2 amd64 6.3.0-18+deb9u1 [11.2 kB]
+Get:20 http://deb.debian.org/debian stretch/main amd64 libquadmath0 amd64 6.3.0-18+deb9u1 [131 kB]
+Get:21 http://deb.debian.org/debian stretch/main amd64 libgcc-6-dev amd64 6.3.0-18+deb9u1 [2296 kB]
+Get:22 http://deb.debian.org/debian stretch/main amd64 gcc-6 amd64 6.3.0-18+deb9u1 [6900 kB]
+Get:23 http://deb.debian.org/debian stretch/main amd64 gcc amd64 4:6.3.0-4 [5196 B]
+Get:24 http://deb.debian.org/debian stretch/main amd64 libc-dev-bin amd64 2.24-11+deb9u3 [258 kB]
+Get:25 http://deb.debian.org/debian stretch/main amd64 linux-libc-dev amd64 4.9.130-2 [1373 kB]
+Get:26 http://deb.debian.org/debian stretch/main amd64 libc6-dev amd64 2.24-11+deb9u3 [2361 kB]
+Get:27 http://deb.debian.org/debian stretch/main amd64 libstdc++-6-dev amd64 6.3.0-18+deb9u1 [1420 kB]
+Get:28 http://deb.debian.org/debian stretch/main amd64 g++-6 amd64 6.3.0-18+deb9u1 [7094 kB]
+Get:29 http://deb.debian.org/debian stretch/main amd64 g++ amd64 4:6.3.0-4 [1546 B]
 <span class="ansi-red-intense-fg">debconf: delaying package configuration, since apt-utils is not installed
-</span>Fetched 4686 kB in 0s (61.1 MB/s)
+</span>Fetched 39.0 MB in 0s (86.9 MB/s)
 (Reading database ... 10360 files and directories currently installed.)
-Preparing to unpack .../git_1%3a2.11.0-3+deb9u4_amd64.deb ...
+Preparing to unpack .../00-git_1%3a2.11.0-3+deb9u4_amd64.deb ...
 Unpacking git (1:2.11.0-3+deb9u4) over (1:2.11.0-3+deb9u3) ...
-Preparing to unpack .../curl_7.52.1-5+deb9u8_amd64.deb ...
-Unpacking curl (7.52.1-5+deb9u8) over (7.52.1-5+deb9u7) ...
-Preparing to unpack .../libcurl3_7.52.1-5+deb9u8_amd64.deb ...
-Unpacking libcurl3:amd64 (7.52.1-5+deb9u8) over (7.52.1-5+deb9u7) ...
-Setting up libcurl3:amd64 (7.52.1-5+deb9u8) ...
+Selecting previously unselected package binutils.
+Preparing to unpack .../01-binutils_2.28-5_amd64.deb ...
+Unpacking binutils (2.28-5) ...
+Selecting previously unselected package libisl15:amd64.
+Preparing to unpack .../02-libisl15_0.18-1_amd64.deb ...
+Unpacking libisl15:amd64 (0.18-1) ...
+Selecting previously unselected package libmpfr4:amd64.
+Preparing to unpack .../03-libmpfr4_3.1.5-1_amd64.deb ...
+Unpacking libmpfr4:amd64 (3.1.5-1) ...
+Selecting previously unselected package libmpc3:amd64.
+Preparing to unpack .../04-libmpc3_1.0.3-1+b2_amd64.deb ...
+Unpacking libmpc3:amd64 (1.0.3-1+b2) ...
+Selecting previously unselected package cpp-6.
+Preparing to unpack .../05-cpp-6_6.3.0-18+deb9u1_amd64.deb ...
+Unpacking cpp-6 (6.3.0-18+deb9u1) ...
+Selecting previously unselected package cpp.
+Preparing to unpack .../06-cpp_4%3a6.3.0-4_amd64.deb ...
+Unpacking cpp (4:6.3.0-4) ...
+Preparing to unpack .../07-curl_7.52.1-5+deb9u9_amd64.deb ...
+Unpacking curl (7.52.1-5+deb9u9) over (7.52.1-5+deb9u7) ...
+Preparing to unpack .../08-libcurl3_7.52.1-5+deb9u9_amd64.deb ...
+Unpacking libcurl3:amd64 (7.52.1-5+deb9u9) over (7.52.1-5+deb9u7) ...
+Selecting previously unselected package libcc1-0:amd64.
+Preparing to unpack .../09-libcc1-0_6.3.0-18+deb9u1_amd64.deb ...
+Unpacking libcc1-0:amd64 (6.3.0-18+deb9u1) ...
+Selecting previously unselected package libgomp1:amd64.
+Preparing to unpack .../10-libgomp1_6.3.0-18+deb9u1_amd64.deb ...
+Unpacking libgomp1:amd64 (6.3.0-18+deb9u1) ...
+Selecting previously unselected package libitm1:amd64.
+Preparing to unpack .../11-libitm1_6.3.0-18+deb9u1_amd64.deb ...
+Unpacking libitm1:amd64 (6.3.0-18+deb9u1) ...
+Selecting previously unselected package libatomic1:amd64.
+Preparing to unpack .../12-libatomic1_6.3.0-18+deb9u1_amd64.deb ...
+Unpacking libatomic1:amd64 (6.3.0-18+deb9u1) ...
+Selecting previously unselected package libasan3:amd64.
+Preparing to unpack .../13-libasan3_6.3.0-18+deb9u1_amd64.deb ...
+Unpacking libasan3:amd64 (6.3.0-18+deb9u1) ...
+Selecting previously unselected package liblsan0:amd64.
+Preparing to unpack .../14-liblsan0_6.3.0-18+deb9u1_amd64.deb ...
+Unpacking liblsan0:amd64 (6.3.0-18+deb9u1) ...
+Selecting previously unselected package libtsan0:amd64.
+Preparing to unpack .../15-libtsan0_6.3.0-18+deb9u1_amd64.deb ...
+Unpacking libtsan0:amd64 (6.3.0-18+deb9u1) ...
+Selecting previously unselected package libubsan0:amd64.
+Preparing to unpack .../16-libubsan0_6.3.0-18+deb9u1_amd64.deb ...
+Unpacking libubsan0:amd64 (6.3.0-18+deb9u1) ...
+Selecting previously unselected package libcilkrts5:amd64.
+Preparing to unpack .../17-libcilkrts5_6.3.0-18+deb9u1_amd64.deb ...
+Unpacking libcilkrts5:amd64 (6.3.0-18+deb9u1) ...
+Selecting previously unselected package libmpx2:amd64.
+Preparing to unpack .../18-libmpx2_6.3.0-18+deb9u1_amd64.deb ...
+Unpacking libmpx2:amd64 (6.3.0-18+deb9u1) ...
+Selecting previously unselected package libquadmath0:amd64.
+Preparing to unpack .../19-libquadmath0_6.3.0-18+deb9u1_amd64.deb ...
+Unpacking libquadmath0:amd64 (6.3.0-18+deb9u1) ...
+Selecting previously unselected package libgcc-6-dev:amd64.
+Preparing to unpack .../20-libgcc-6-dev_6.3.0-18+deb9u1_amd64.deb ...
+Unpacking libgcc-6-dev:amd64 (6.3.0-18+deb9u1) ...
+Selecting previously unselected package gcc-6.
+Preparing to unpack .../21-gcc-6_6.3.0-18+deb9u1_amd64.deb ...
+Unpacking gcc-6 (6.3.0-18+deb9u1) ...
+Selecting previously unselected package gcc.
+Preparing to unpack .../22-gcc_4%3a6.3.0-4_amd64.deb ...
+Unpacking gcc (4:6.3.0-4) ...
+Selecting previously unselected package libc-dev-bin.
+Preparing to unpack .../23-libc-dev-bin_2.24-11+deb9u3_amd64.deb ...
+Unpacking libc-dev-bin (2.24-11+deb9u3) ...
+Selecting previously unselected package linux-libc-dev:amd64.
+Preparing to unpack .../24-linux-libc-dev_4.9.130-2_amd64.deb ...
+Unpacking linux-libc-dev:amd64 (4.9.130-2) ...
+Selecting previously unselected package libc6-dev:amd64.
+Preparing to unpack .../25-libc6-dev_2.24-11+deb9u3_amd64.deb ...
+Unpacking libc6-dev:amd64 (2.24-11+deb9u3) ...
+Selecting previously unselected package libstdc++-6-dev:amd64.
+Preparing to unpack .../26-libstdc++-6-dev_6.3.0-18+deb9u1_amd64.deb ...
+Unpacking libstdc++-6-dev:amd64 (6.3.0-18+deb9u1) ...
+Selecting previously unselected package g++-6.
+Preparing to unpack .../27-g++-6_6.3.0-18+deb9u1_amd64.deb ...
+Unpacking g++-6 (6.3.0-18+deb9u1) ...
+Selecting previously unselected package g++.
+Preparing to unpack .../28-g++_4%3a6.3.0-4_amd64.deb ...
+Unpacking g++ (4:6.3.0-4) ...
+Setting up libquadmath0:amd64 (6.3.0-18+deb9u1) ...
+Setting up libgomp1:amd64 (6.3.0-18+deb9u1) ...
+Setting up libatomic1:amd64 (6.3.0-18+deb9u1) ...
+Setting up libcc1-0:amd64 (6.3.0-18+deb9u1) ...
+Setting up libasan3:amd64 (6.3.0-18+deb9u1) ...
+Setting up libcurl3:amd64 (7.52.1-5+deb9u9) ...
+Setting up libcilkrts5:amd64 (6.3.0-18+deb9u1) ...
+Setting up libubsan0:amd64 (6.3.0-18+deb9u1) ...
+Setting up libtsan0:amd64 (6.3.0-18+deb9u1) ...
+Setting up linux-libc-dev:amd64 (4.9.130-2) ...
+Setting up liblsan0:amd64 (6.3.0-18+deb9u1) ...
+Setting up libmpx2:amd64 (6.3.0-18+deb9u1) ...
+Setting up libisl15:amd64 (0.18-1) ...
 Processing triggers for libc-bin (2.24-11+deb9u3) ...
+Setting up libmpfr4:amd64 (3.1.5-1) ...
+Setting up libmpc3:amd64 (1.0.3-1+b2) ...
+Setting up binutils (2.28-5) ...
+Setting up cpp-6 (6.3.0-18+deb9u1) ...
+Setting up libc-dev-bin (2.24-11+deb9u3) ...
+Setting up libc6-dev:amd64 (2.24-11+deb9u3) ...
 Setting up git (1:2.11.0-3+deb9u4) ...
-Setting up curl (7.52.1-5+deb9u8) ...
-Removing intermediate container 56f16dece378
- ---&gt; 67ae2486de60
-Step 4/10 : ADD aml_sdk_conda_dep_file.yml /tmp/aml_sdk_conda_dep_file.yml
- ---&gt; ddb5928186fd
-Step 5/10 : ENV CONDA_ENV_NAME aml-sdk-conda-env
- ---&gt; Running in e5e297ba9b51
-Removing intermediate container e5e297ba9b51
- ---&gt; 1f7fe579ead4
-Step 6/10 : RUN  conda env create -q --name $CONDA_ENV_NAME -f /tmp/aml_sdk_conda_dep_file.yml &amp;&amp;     conda clean --yes --all
- ---&gt; Running in 3cd344adc435
+Setting up libitm1:amd64 (6.3.0-18+deb9u1) ...
+Setting up cpp (4:6.3.0-4) ...
+Setting up libgcc-6-dev:amd64 (6.3.0-18+deb9u1) ...
+Setting up libstdc++-6-dev:amd64 (6.3.0-18+deb9u1) ...
+Setting up curl (7.52.1-5+deb9u9) ...
+Setting up gcc-6 (6.3.0-18+deb9u1) ...
+Setting up g++-6 (6.3.0-18+deb9u1) ...
+Setting up gcc (4:6.3.0-4) ...
+Setting up g++ (4:6.3.0-4) ...
+update-alternatives: using /usr/bin/g++ to provide /usr/bin/c++ (c++) in auto mode
+Processing triggers for libc-bin (2.24-11+deb9u3) ...
+Removing intermediate container 0f9efacfab55
+ ---&gt; bcd2c9c3e407
+Step 4/12 : ADD aml_sdk_conda_dep_file.yml /tmp/aml_sdk_conda_dep_file.yml
+ ---&gt; 500144870ab0
+Step 5/12 : ENV CONDA_DIR /opt/conda
+ ---&gt; Running in b7d9bef31271
+Removing intermediate container b7d9bef31271
+ ---&gt; 5792edfbac85
+Step 6/12 : ENV CONDA_ENV_NAME aml-sdk-conda-env
+ ---&gt; Running in 53a7689354de
+Removing intermediate container 53a7689354de
+ ---&gt; 12b9ddd713a8
+Step 7/12 : RUN /opt/conda/bin/conda env create -q --name $CONDA_ENV_NAME -f /tmp/aml_sdk_conda_dep_file.yml &amp;&amp;     /opt/conda/bin/conda clean  --yes --all
+ ---&gt; Running in 765562d5b405
 Solving environment: ...working... done
 Preparing transaction: ...working... done
 Verifying transaction: ...working... done
@@ -12318,169 +12411,455 @@ Enabling: nb_conda
       nb_conda 2.2.1 <span class="ansi-green-fg">OK</span>
 
 done
-Collecting python-dotenv (from -r /tmp/condaenv.0at6m5q2.requirements.txt (line 1))
+Collecting python-dotenv (from -r /tmp/condaenv.qxtvoe3u.requirements.txt (line 1))
   Downloading https://files.pythonhosted.org/packages/8c/14/501508b016e7b1ad0eb91bba581e66ad9bfc7c66fcacbb580eaf9bc38458/python_dotenv-0.10.1-py2.py3-none-any.whl
-Installing collected packages: python-dotenv
-Successfully installed python-dotenv-0.10.1
+Collecting azureml-sdk[automl,explain,notebooks] (from -r /tmp/condaenv.qxtvoe3u.requirements.txt (line 2))
+  Downloading https://files.pythonhosted.org/packages/ff/08/042fc0fc6126054869fc087998184ea7c99ff6db8a0aee0bcb7d9a82a090/azureml_sdk-1.0.15.1-py3-none-any.whl
+Collecting azureml-core==1.0.15.* (from azureml-sdk[automl,explain,notebooks]-&gt;-r /tmp/condaenv.qxtvoe3u.requirements.txt (line 2))
+  Downloading https://files.pythonhosted.org/packages/a9/a6/dd85766160ec29c31200c15b88756fe4fceb8681396e72b2afa32cda712e/azureml_core-1.0.15-py2.py3-none-any.whl (710kB)
+Collecting azureml-train==1.0.15.* (from azureml-sdk[automl,explain,notebooks]-&gt;-r /tmp/condaenv.qxtvoe3u.requirements.txt (line 2))
+  Downloading https://files.pythonhosted.org/packages/cc/eb/dce049020d70c4322bb6fc4b1cfd2ec7915ba88802509a26d0751b3b76c5/azureml_train-1.0.15-py3-none-any.whl
+Collecting azureml-pipeline==1.0.15.* (from azureml-sdk[automl,explain,notebooks]-&gt;-r /tmp/condaenv.qxtvoe3u.requirements.txt (line 2))
+  Downloading https://files.pythonhosted.org/packages/a6/8e/3765eab01a13db1b32b1f6e4a8ec6b897ea329eee5c7028cfe983008ab6e/azureml_pipeline-1.0.15-py3-none-any.whl
+Collecting azureml-train-automl==1.0.15.*; extra == &#34;automl&#34; (from azureml-sdk[automl,explain,notebooks]-&gt;-r /tmp/condaenv.qxtvoe3u.requirements.txt (line 2))
+  Downloading https://files.pythonhosted.org/packages/63/c6/61e93f2a01430ca36ddaca2ddf01ee8b00388c9cb9c57ace9f49eced75cb/azureml_train_automl-1.0.15-py3-none-any.whl (356kB)
+Collecting azureml-explain-model==1.0.15.*; extra == &#34;explain&#34; (from azureml-sdk[automl,explain,notebooks]-&gt;-r /tmp/condaenv.qxtvoe3u.requirements.txt (line 2))
+  Downloading https://files.pythonhosted.org/packages/79/4d/1bea614bf6f7005ce3472911980b2e26d554381def6f6f5b9bd3ec7089d2/azureml_explain_model-1.0.15-py3-none-any.whl
+Collecting azureml-widgets==1.0.15.*; extra == &#34;notebooks&#34; (from azureml-sdk[automl,explain,notebooks]-&gt;-r /tmp/condaenv.qxtvoe3u.requirements.txt (line 2))
+  Downloading https://files.pythonhosted.org/packages/d4/88/f7a45a0457ecb23544fcc1ffb06cfffba84ffc794841835b64917bc32832/azureml_widgets-1.0.15-py3-none-any.whl (4.6MB)
+Collecting pytz (from azureml-core==1.0.15.*-&gt;azureml-sdk[automl,explain,notebooks]-&gt;-r /tmp/condaenv.qxtvoe3u.requirements.txt (line 2))
+  Downloading https://files.pythonhosted.org/packages/61/28/1d3920e4d1d50b19bc5d24398a7cd85cc7b9a75a490570d5a30c57622d34/pytz-2018.9-py2.py3-none-any.whl (510kB)
+Collecting pathspec (from azureml-core==1.0.15.*-&gt;azureml-sdk[automl,explain,notebooks]-&gt;-r /tmp/condaenv.qxtvoe3u.requirements.txt (line 2))
+  Downloading https://files.pythonhosted.org/packages/84/2a/bfee636b1e2f7d6e30dd74f49201ccfa5c3cf322d44929ecc6c137c486c5/pathspec-0.5.9.tar.gz
+Collecting azure-mgmt-resource&gt;=1.2.1 (from azureml-core==1.0.15.*-&gt;azureml-sdk[automl,explain,notebooks]-&gt;-r /tmp/condaenv.qxtvoe3u.requirements.txt (line 2))
+  Downloading https://files.pythonhosted.org/packages/2b/2e/e79a278bedfc21308ab0c632759cfda5d7ff02d62260bcc4632449937dcf/azure_mgmt_resource-2.1.0-py2.py3-none-any.whl (757kB)
+Collecting azure-storage-nspkg&gt;=3.0.0 (from azureml-core==1.0.15.*-&gt;azureml-sdk[automl,explain,notebooks]-&gt;-r /tmp/condaenv.qxtvoe3u.requirements.txt (line 2))
+  Downloading https://files.pythonhosted.org/packages/ba/f6/054ace7b01c6c21b3b95a83c3997f7d6539d939a2c08c4f27f779128a030/azure_storage_nspkg-3.1.0-py2.py3-none-any.whl
+Collecting msrestazure&gt;=0.4.33 (from azureml-core==1.0.15.*-&gt;azureml-sdk[automl,explain,notebooks]-&gt;-r /tmp/condaenv.qxtvoe3u.requirements.txt (line 2))
+  Downloading https://files.pythonhosted.org/packages/46/ba/7870308e3d3b4b3956880eed2df20669a5690436793e6fc1442c8b73e01c/msrestazure-0.6.0-py2.py3-none-any.whl
+Collecting ruamel.yaml&lt;=0.15.51,&gt;=0.15.35 (from azureml-core==1.0.15.*-&gt;azureml-sdk[automl,explain,notebooks]-&gt;-r /tmp/condaenv.qxtvoe3u.requirements.txt (line 2))
+  Downloading https://files.pythonhosted.org/packages/d2/7f/9bb3ba89ceab600c4a0ea75d638ea945215ca3458ac6528e0e39fa3254e4/ruamel.yaml-0.15.51-cp36-cp36m-manylinux1_x86_64.whl (640kB)
+Collecting docker (from azureml-core==1.0.15.*-&gt;azureml-sdk[automl,explain,notebooks]-&gt;-r /tmp/condaenv.qxtvoe3u.requirements.txt (line 2))
+  Downloading https://files.pythonhosted.org/packages/7e/3c/b610f22b170b0f8fe4d8f78974878e116562389f666f99e6549567eb9d87/docker-3.7.0-py2.py3-none-any.whl (133kB)
+Collecting msrest&gt;=0.5.1 (from azureml-core==1.0.15.*-&gt;azureml-sdk[automl,explain,notebooks]-&gt;-r /tmp/condaenv.qxtvoe3u.requirements.txt (line 2))
+  Downloading https://files.pythonhosted.org/packages/eb/96/1cf56e4cfd221b7f6eb6ab096dc23b0d21361393f0784276531e49b0b2a1/msrest-0.6.4-py2.py3-none-any.whl (81kB)
+Collecting urllib3&lt;1.24,&gt;=1.23 (from azureml-core==1.0.15.*-&gt;azureml-sdk[automl,explain,notebooks]-&gt;-r /tmp/condaenv.qxtvoe3u.requirements.txt (line 2))
+  Downloading https://files.pythonhosted.org/packages/bd/c9/6fdd990019071a4a32a5e7cb78a1d92c53851ef4f56f62a3486e6a7d8ffb/urllib3-1.23-py2.py3-none-any.whl (133kB)
+Collecting SecretStorage&lt;3.0.0 (from azureml-core==1.0.15.*-&gt;azureml-sdk[automl,explain,notebooks]-&gt;-r /tmp/condaenv.qxtvoe3u.requirements.txt (line 2))
+  Downloading https://files.pythonhosted.org/packages/a5/a5/0830cfe34a4cfd0d1c3c8b614ede1edb2aaf999091ac8548dd19cb352e79/SecretStorage-2.3.1.tar.gz
+Collecting pyyaml&gt;=3.13 (from azureml-core==1.0.15.*-&gt;azureml-sdk[automl,explain,notebooks]-&gt;-r /tmp/condaenv.qxtvoe3u.requirements.txt (line 2))
+  Downloading https://files.pythonhosted.org/packages/9e/a3/1d13970c3f36777c583f136c136f804d70f500168edc1edea6daa7200769/PyYAML-3.13.tar.gz (270kB)
+Collecting azure-storage-common&gt;=1.1.0 (from azureml-core==1.0.15.*-&gt;azureml-sdk[automl,explain,notebooks]-&gt;-r /tmp/condaenv.qxtvoe3u.requirements.txt (line 2))
+  Downloading https://files.pythonhosted.org/packages/73/84/025ac436a6a1d5516d1a67887d7122b3b2ea04ba6b2d2c46fe949accb62b/azure_storage_common-1.4.0-py2.py3-none-any.whl (46kB)
+Collecting requests&gt;=2.19.1 (from azureml-core==1.0.15.*-&gt;azureml-sdk[automl,explain,notebooks]-&gt;-r /tmp/condaenv.qxtvoe3u.requirements.txt (line 2))
+  Downloading https://files.pythonhosted.org/packages/7d/e3/20f3d364d6c8e5d2353c72a67778eb189176f08e873c9900e10c0287b84b/requests-2.21.0-py2.py3-none-any.whl (57kB)
+Collecting azure-mgmt-storage&gt;=1.5.0 (from azureml-core==1.0.15.*-&gt;azureml-sdk[automl,explain,notebooks]-&gt;-r /tmp/condaenv.qxtvoe3u.requirements.txt (line 2))
+  Downloading https://files.pythonhosted.org/packages/d9/87/ab44b9d9627ff91825ba5f5a39092ebfe97a90679008609db4c479036591/azure_mgmt_storage-3.1.1-py2.py3-none-any.whl (696kB)
+Collecting contextlib2 (from azureml-core==1.0.15.*-&gt;azureml-sdk[automl,explain,notebooks]-&gt;-r /tmp/condaenv.qxtvoe3u.requirements.txt (line 2))
+  Downloading https://files.pythonhosted.org/packages/a2/71/8273a7eeed0aff6a854237ab5453bc9aa67deb49df4832801c21f0ff3782/contextlib2-0.5.5-py2.py3-none-any.whl
+Collecting azure-common&gt;=1.1.12 (from azureml-core==1.0.15.*-&gt;azureml-sdk[automl,explain,notebooks]-&gt;-r /tmp/condaenv.qxtvoe3u.requirements.txt (line 2))
+  Downloading https://files.pythonhosted.org/packages/c3/f8/46248b201fd38b7e93c6da644e2fc3bc5a39118f253562751fd295a8cc77/azure_common-1.1.18-py2.py3-none-any.whl
+Collecting azure-storage-blob&gt;=1.1.0 (from azureml-core==1.0.15.*-&gt;azureml-sdk[automl,explain,notebooks]-&gt;-r /tmp/condaenv.qxtvoe3u.requirements.txt (line 2))
+  Downloading https://files.pythonhosted.org/packages/25/f4/a307ed89014e9abb5c5cfc8ca7f8f797d12f619f17a6059a6fd4b153b5d0/azure_storage_blob-1.5.0-py2.py3-none-any.whl (75kB)
+Collecting azure-graphrbac&gt;=0.40.0 (from azureml-core==1.0.15.*-&gt;azureml-sdk[automl,explain,notebooks]-&gt;-r /tmp/condaenv.qxtvoe3u.requirements.txt (line 2))
+  Downloading https://files.pythonhosted.org/packages/da/a8/3d3d6fe8458b2b07bad10195c79928ea9ba87b5cc0c08903b387dd27c6f0/azure_graphrbac-0.53.0-py2.py3-none-any.whl (108kB)
+Collecting PyJWT (from azureml-core==1.0.15.*-&gt;azureml-sdk[automl,explain,notebooks]-&gt;-r /tmp/condaenv.qxtvoe3u.requirements.txt (line 2))
+  Downloading https://files.pythonhosted.org/packages/87/8b/6a9f14b5f781697e51259d81657e6048fd31a113229cf346880bb7545565/PyJWT-1.7.1-py2.py3-none-any.whl
+Requirement already satisfied: six&gt;=1.11.0 in /opt/conda/envs/aml-sdk-conda-env/lib/python3.6/site-packages (from azureml-core==1.0.15.*-&gt;azureml-sdk[automl,explain,notebooks]-&gt;-r /tmp/condaenv.qxtvoe3u.requirements.txt (line 2)) (1.12.0)
+Collecting adal&gt;=1.2.0 (from azureml-core==1.0.15.*-&gt;azureml-sdk[automl,explain,notebooks]-&gt;-r /tmp/condaenv.qxtvoe3u.requirements.txt (line 2))
+  Downloading https://files.pythonhosted.org/packages/00/72/53dce9e4f5d6c1aa57b8d408cb34dff1969ecbf10ab7e678f32c5e0e2397/adal-1.2.1-py2.py3-none-any.whl (52kB)
+Collecting jmespath (from azureml-core==1.0.15.*-&gt;azureml-sdk[automl,explain,notebooks]-&gt;-r /tmp/condaenv.qxtvoe3u.requirements.txt (line 2))
+  Downloading https://files.pythonhosted.org/packages/b7/31/05c8d001f7f87f0f07289a5fc0fc3832e9a57f2dbd4d3b0fee70e0d51365/jmespath-0.9.3-py2.py3-none-any.whl
+Collecting ndg-httpsclient (from azureml-core==1.0.15.*-&gt;azureml-sdk[automl,explain,notebooks]-&gt;-r /tmp/condaenv.qxtvoe3u.requirements.txt (line 2))
+  Downloading https://files.pythonhosted.org/packages/fb/67/c2f508c00ed2a6911541494504b7cac16fe0b0473912568df65fd1801132/ndg_httpsclient-0.5.1-py3-none-any.whl
+Collecting colorama&gt;=0.3.9 (from azureml-core==1.0.15.*-&gt;azureml-sdk[automl,explain,notebooks]-&gt;-r /tmp/condaenv.qxtvoe3u.requirements.txt (line 2))
+  Downloading https://files.pythonhosted.org/packages/4f/a6/728666f39bfff1719fc94c481890b2106837da9318031f71a8424b662e12/colorama-0.4.1-py2.py3-none-any.whl
+Collecting jsonpickle (from azureml-core==1.0.15.*-&gt;azureml-sdk[automl,explain,notebooks]-&gt;-r /tmp/condaenv.qxtvoe3u.requirements.txt (line 2))
+  Downloading https://files.pythonhosted.org/packages/dc/12/8c44eabb501e2bc0aec0dd152b328074d98a50968d3a02be28f6037f0c6a/jsonpickle-1.1-py2.py3-none-any.whl
+Collecting paramiko&gt;=2.0.8 (from azureml-core==1.0.15.*-&gt;azureml-sdk[automl,explain,notebooks]-&gt;-r /tmp/condaenv.qxtvoe3u.requirements.txt (line 2))
+  Downloading https://files.pythonhosted.org/packages/cf/ae/94e70d49044ccc234bfdba20114fa947d7ba6eb68a2e452d89b920e62227/paramiko-2.4.2-py2.py3-none-any.whl (193kB)
+Collecting azure-mgmt-containerregistry&gt;=2.0.0 (from azureml-core==1.0.15.*-&gt;azureml-sdk[automl,explain,notebooks]-&gt;-r /tmp/condaenv.qxtvoe3u.requirements.txt (line 2))
+  Downloading https://files.pythonhosted.org/packages/7a/4b/06040d992f93531e32c5f7cf7884f3edfec11f76f802dd9224c1116c3129/azure_mgmt_containerregistry-2.7.0-py2.py3-none-any.whl (509kB)
+Collecting pyopenssl&gt;=17.1.0 (from azureml-core==1.0.15.*-&gt;azureml-sdk[automl,explain,notebooks]-&gt;-r /tmp/condaenv.qxtvoe3u.requirements.txt (line 2))
+  Downloading https://files.pythonhosted.org/packages/01/c8/ceb170d81bd3941cbeb9940fc6cc2ef2ca4288d0ca8929ea4db5905d904d/pyOpenSSL-19.0.0-py2.py3-none-any.whl (53kB)
+Collecting azure-mgmt-keyvault&gt;=0.40.0 (from azureml-core==1.0.15.*-&gt;azureml-sdk[automl,explain,notebooks]-&gt;-r /tmp/condaenv.qxtvoe3u.requirements.txt (line 2))
+  Downloading https://files.pythonhosted.org/packages/49/de/0d69aedae7c5f6428314640b65947203ab80409c12b5d4e66fb5b7a4182e/azure_mgmt_keyvault-1.1.0-py2.py3-none-any.whl (111kB)
+Collecting cryptography!=1.9,!=2.0.*,!=2.1.*,!=2.2.* (from azureml-core==1.0.15.*-&gt;azureml-sdk[automl,explain,notebooks]-&gt;-r /tmp/condaenv.qxtvoe3u.requirements.txt (line 2))
+  Downloading https://files.pythonhosted.org/packages/98/71/e632e222f34632e0527dd41799f7847305e701f38f512d81bdf96009bca4/cryptography-2.5-cp34-abi3-manylinux1_x86_64.whl (2.4MB)
+Collecting azure-mgmt-authorization&gt;=0.40.0 (from azureml-core==1.0.15.*-&gt;azureml-sdk[automl,explain,notebooks]-&gt;-r /tmp/condaenv.qxtvoe3u.requirements.txt (line 2))
+  Downloading https://files.pythonhosted.org/packages/a1/71/9a20913e92771b3c23564f1bea54d376d09fb30a75585087c70b769d75c8/azure_mgmt_authorization-0.51.1-py2.py3-none-any.whl (111kB)
+Requirement already satisfied: python-dateutil&gt;=2.7.3 in /opt/conda/envs/aml-sdk-conda-env/lib/python3.6/site-packages (from azureml-core==1.0.15.*-&gt;azureml-sdk[automl,explain,notebooks]-&gt;-r /tmp/condaenv.qxtvoe3u.requirements.txt (line 2)) (2.7.5)
+Collecting backports.tempfile (from azureml-core==1.0.15.*-&gt;azureml-sdk[automl,explain,notebooks]-&gt;-r /tmp/condaenv.qxtvoe3u.requirements.txt (line 2))
+  Downloading https://files.pythonhosted.org/packages/b4/5c/077f910632476281428fe254807952eb47ca78e720d059a46178c541e669/backports.tempfile-1.0-py2.py3-none-any.whl
+Collecting azureml-train-core==1.0.15.* (from azureml-train==1.0.15.*-&gt;azureml-sdk[automl,explain,notebooks]-&gt;-r /tmp/condaenv.qxtvoe3u.requirements.txt (line 2))
+  Downloading https://files.pythonhosted.org/packages/4a/77/21a8b6a1b7bb682deb6060f68e04863b6cb0a0883097fed4f37cdc04c48d/azureml_train_core-1.0.15-py3-none-any.whl
+Collecting azureml-pipeline-steps==1.0.15.* (from azureml-pipeline==1.0.15.*-&gt;azureml-sdk[automl,explain,notebooks]-&gt;-r /tmp/condaenv.qxtvoe3u.requirements.txt (line 2))
+  Downloading https://files.pythonhosted.org/packages/4d/b0/6e9b05d46859d942e41bd1718a29c55e00f89aa41075c173c81c1ec76d78/azureml_pipeline_steps-1.0.15-py3-none-any.whl
+Collecting azureml-pipeline-core==1.0.15.* (from azureml-pipeline==1.0.15.*-&gt;azureml-sdk[automl,explain,notebooks]-&gt;-r /tmp/condaenv.qxtvoe3u.requirements.txt (line 2))
+  Downloading https://files.pythonhosted.org/packages/4c/dd/0ad1b416ec5aea019d1f460bb209aaf31dbd2cec191feeac7e7f78106050/azureml_pipeline_core-1.0.15-py3-none-any.whl (130kB)
+Collecting azureml-dataprep&lt;1.1.0,&gt;=0.5.2 (from azureml-train-automl==1.0.15.*; extra == &#34;automl&#34;-&gt;azureml-sdk[automl,explain,notebooks]-&gt;-r /tmp/condaenv.qxtvoe3u.requirements.txt (line 2))
+  Downloading https://files.pythonhosted.org/packages/f0/d7/f569273da9ba525386387c7513503de364acf96d742f9ea0afb7926b48ad/azureml_dataprep-1.0.12-py3-none-any.whl (24.9MB)
+Collecting lightgbm&lt;=2.2.1,&gt;=2.0.11 (from azureml-train-automl==1.0.15.*; extra == &#34;automl&#34;-&gt;azureml-sdk[automl,explain,notebooks]-&gt;-r /tmp/condaenv.qxtvoe3u.requirements.txt (line 2))
+  Downloading https://files.pythonhosted.org/packages/78/7e/bc87e7951cfaa998cffaf39e6c721f5bd04efb2e139486206356edb289a5/lightgbm-2.2.1-py2.py3-none-manylinux1_x86_64.whl (1.1MB)
+Collecting pandas&lt;=0.23.4,&gt;=0.21.0 (from azureml-train-automl==1.0.15.*; extra == &#34;automl&#34;-&gt;azureml-sdk[automl,explain,notebooks]-&gt;-r /tmp/condaenv.qxtvoe3u.requirements.txt (line 2))
+  Downloading https://files.pythonhosted.org/packages/e1/d8/feeb346d41f181e83fba45224ab14a8d8af019b48af742e047f3845d8cff/pandas-0.23.4-cp36-cp36m-manylinux1_x86_64.whl (8.9MB)
+Collecting scikit-learn==0.19.1 (from azureml-train-automl==1.0.15.*; extra == &#34;automl&#34;-&gt;azureml-sdk[automl,explain,notebooks]-&gt;-r /tmp/condaenv.qxtvoe3u.requirements.txt (line 2))
+  Downloading https://files.pythonhosted.org/packages/3d/2d/9fbc7baa5f44bc9e88ffb7ed32721b879bfa416573e85031e16f52569bc9/scikit_learn-0.19.1-cp36-cp36m-manylinux1_x86_64.whl (12.4MB)
+Collecting azureml-telemetry==1.0.15.* (from azureml-train-automl==1.0.15.*; extra == &#34;automl&#34;-&gt;azureml-sdk[automl,explain,notebooks]-&gt;-r /tmp/condaenv.qxtvoe3u.requirements.txt (line 2))
+  Downloading https://files.pythonhosted.org/packages/69/33/07e162febdac4c102da95cfe5b01ab2664c411fb1950a5a6333cce506724/azureml_telemetry-1.0.15-py3-none-any.whl
+Collecting dill&gt;=0.2.8 (from azureml-train-automl==1.0.15.*; extra == &#34;automl&#34;-&gt;azureml-sdk[automl,explain,notebooks]-&gt;-r /tmp/condaenv.qxtvoe3u.requirements.txt (line 2))
+  Downloading https://files.pythonhosted.org/packages/fe/42/bfe2e0857bc284cbe6a011d93f2a9ad58a22cb894461b199ae72cfef0f29/dill-0.2.9.tar.gz (150kB)
+Collecting scipy&lt;=1.1.0,&gt;=1.0.0 (from azureml-train-automl==1.0.15.*; extra == &#34;automl&#34;-&gt;azureml-sdk[automl,explain,notebooks]-&gt;-r /tmp/condaenv.qxtvoe3u.requirements.txt (line 2))
+  Downloading https://files.pythonhosted.org/packages/a8/0b/f163da98d3a01b3e0ef1cab8dd2123c34aee2bafbb1c5bffa354cc8a1730/scipy-1.1.0-cp36-cp36m-manylinux1_x86_64.whl (31.2MB)
+Collecting resource&gt;=0.1.8 (from azureml-train-automl==1.0.15.*; extra == &#34;automl&#34;-&gt;azureml-sdk[automl,explain,notebooks]-&gt;-r /tmp/condaenv.qxtvoe3u.requirements.txt (line 2))
+  Downloading https://files.pythonhosted.org/packages/34/ad/9cd037c01c075f9a273c23557f8e71195d773d59d3881bbb26011d396c8b/Resource-0.2.1-py2.py3-none-any.whl
+Collecting tensorflow&gt;=1.10.0 (from azureml-train-automl==1.0.15.*; extra == &#34;automl&#34;-&gt;azureml-sdk[automl,explain,notebooks]-&gt;-r /tmp/condaenv.qxtvoe3u.requirements.txt (line 2))
+  Downloading https://files.pythonhosted.org/packages/22/cc/ca70b78087015d21c5f3f93694107f34ebccb3be9624385a911d4b52ecef/tensorflow-1.12.0-cp36-cp36m-manylinux1_x86_64.whl (83.1MB)
+Collecting numpy&lt;1.15.0,&gt;=1.11.0 (from azureml-train-automl==1.0.15.*; extra == &#34;automl&#34;-&gt;azureml-sdk[automl,explain,notebooks]-&gt;-r /tmp/condaenv.qxtvoe3u.requirements.txt (line 2))
+  Downloading https://files.pythonhosted.org/packages/e5/c4/395ebb218053ba44d64935b3729bc88241ec279915e72100c5979db10945/numpy-1.14.6-cp36-cp36m-manylinux1_x86_64.whl (13.8MB)
+Collecting sklearn-pandas&lt;=1.7.0,&gt;=1.4.0 (from azureml-train-automl==1.0.15.*; extra == &#34;automl&#34;-&gt;azureml-sdk[automl,explain,notebooks]-&gt;-r /tmp/condaenv.qxtvoe3u.requirements.txt (line 2))
+  Downloading https://files.pythonhosted.org/packages/7e/9c/c94f46b40b86d2c77c46c4c1b858fc66c117b4390665eca28f2e0812db45/sklearn_pandas-1.7.0-py2.py3-none-any.whl
+Collecting wheel==0.30.0 (from azureml-train-automl==1.0.15.*; extra == &#34;automl&#34;-&gt;azureml-sdk[automl,explain,notebooks]-&gt;-r /tmp/condaenv.qxtvoe3u.requirements.txt (line 2))
+  Downloading https://files.pythonhosted.org/packages/0c/80/16a85b47702a1f47a63c104c91abdd0a6704ee8ae3b4ce4afc49bc39f9d9/wheel-0.30.0-py2.py3-none-any.whl (49kB)
+Collecting shap&lt;=0.26.0,&gt;=0.20.0 (from azureml-explain-model==1.0.15.*; extra == &#34;explain&#34;-&gt;azureml-sdk[automl,explain,notebooks]-&gt;-r /tmp/condaenv.qxtvoe3u.requirements.txt (line 2))
+  Downloading https://files.pythonhosted.org/packages/61/8b/540acc70e928de19d3b0a3721f67af9eebe20bfa6423eeeafa885024a783/shap-0.26.0.tar.gz (212kB)
+Collecting ipywidgets&gt;=7.0.0 (from azureml-widgets==1.0.15.*; extra == &#34;notebooks&#34;-&gt;azureml-sdk[automl,explain,notebooks]-&gt;-r /tmp/condaenv.qxtvoe3u.requirements.txt (line 2))
+  Downloading https://files.pythonhosted.org/packages/30/9a/a008c7b1183fac9e52066d80a379b3c64eab535bd9d86cdc29a0b766fd82/ipywidgets-7.4.2-py2.py3-none-any.whl (111kB)
+Collecting azure-nspkg&gt;=2.0.0 (from azure-storage-nspkg&gt;=3.0.0-&gt;azureml-core==1.0.15.*-&gt;azureml-sdk[automl,explain,notebooks]-&gt;-r /tmp/condaenv.qxtvoe3u.requirements.txt (line 2))
+  Downloading https://files.pythonhosted.org/packages/c4/0c/c562be95a9a2ed52454f598571cf300b1114d0db2aa27f5b8ed3bb9cd0c0/azure_nspkg-3.0.2-py3-none-any.whl
+Collecting websocket-client&gt;=0.32.0 (from docker-&gt;azureml-core==1.0.15.*-&gt;azureml-sdk[automl,explain,notebooks]-&gt;-r /tmp/condaenv.qxtvoe3u.requirements.txt (line 2))
+  Downloading https://files.pythonhosted.org/packages/26/2d/f749a5c82f6192d77ed061a38e02001afcba55fe8477336d26a950ab17ce/websocket_client-0.54.0-py2.py3-none-any.whl (200kB)
+Collecting docker-pycreds&gt;=0.4.0 (from docker-&gt;azureml-core==1.0.15.*-&gt;azureml-sdk[automl,explain,notebooks]-&gt;-r /tmp/condaenv.qxtvoe3u.requirements.txt (line 2))
+  Downloading https://files.pythonhosted.org/packages/f5/e8/f6bd1eee09314e7e6dee49cbe2c5e22314ccdb38db16c9fc72d2fa80d054/docker_pycreds-0.4.0-py2.py3-none-any.whl
+Requirement already satisfied: certifi&gt;=2017.4.17 in /opt/conda/envs/aml-sdk-conda-env/lib/python3.6/site-packages (from msrest&gt;=0.5.1-&gt;azureml-core==1.0.15.*-&gt;azureml-sdk[automl,explain,notebooks]-&gt;-r /tmp/condaenv.qxtvoe3u.requirements.txt (line 2)) (2018.11.29)
+Collecting requests-oauthlib&gt;=0.5.0 (from msrest&gt;=0.5.1-&gt;azureml-core==1.0.15.*-&gt;azureml-sdk[automl,explain,notebooks]-&gt;-r /tmp/condaenv.qxtvoe3u.requirements.txt (line 2))
+  Downloading https://files.pythonhosted.org/packages/c2/e2/9fd03d55ffb70fe51f587f20bcf407a6927eb121de86928b34d162f0b1ac/requests_oauthlib-1.2.0-py2.py3-none-any.whl
+Collecting isodate&gt;=0.6.0 (from msrest&gt;=0.5.1-&gt;azureml-core==1.0.15.*-&gt;azureml-sdk[automl,explain,notebooks]-&gt;-r /tmp/condaenv.qxtvoe3u.requirements.txt (line 2))
+  Downloading https://files.pythonhosted.org/packages/9b/9f/b36f7774ff5ea8e428fdcfc4bb332c39ee5b9362ddd3d40d9516a55221b2/isodate-0.6.0-py2.py3-none-any.whl (45kB)
+Collecting chardet&lt;3.1.0,&gt;=3.0.2 (from requests&gt;=2.19.1-&gt;azureml-core==1.0.15.*-&gt;azureml-sdk[automl,explain,notebooks]-&gt;-r /tmp/condaenv.qxtvoe3u.requirements.txt (line 2))
+  Downloading https://files.pythonhosted.org/packages/bc/a9/01ffebfb562e4274b6487b4bb1ddec7ca55ec7510b22e4c51f14098443b8/chardet-3.0.4-py2.py3-none-any.whl (133kB)
+Collecting idna&lt;2.9,&gt;=2.5 (from requests&gt;=2.19.1-&gt;azureml-core==1.0.15.*-&gt;azureml-sdk[automl,explain,notebooks]-&gt;-r /tmp/condaenv.qxtvoe3u.requirements.txt (line 2))
+  Downloading https://files.pythonhosted.org/packages/14/2c/cd551d81dbe15200be1cf41cd03869a46fe7226e7450af7a6545bfc474c9/idna-2.8-py2.py3-none-any.whl (58kB)
+Collecting pyasn1&gt;=0.1.1 (from ndg-httpsclient-&gt;azureml-core==1.0.15.*-&gt;azureml-sdk[automl,explain,notebooks]-&gt;-r /tmp/condaenv.qxtvoe3u.requirements.txt (line 2))
+  Downloading https://files.pythonhosted.org/packages/7b/7c/c9386b82a25115cccf1903441bba3cbadcfae7b678a20167347fa8ded34c/pyasn1-0.4.5-py2.py3-none-any.whl (73kB)
+Collecting bcrypt&gt;=3.1.3 (from paramiko&gt;=2.0.8-&gt;azureml-core==1.0.15.*-&gt;azureml-sdk[automl,explain,notebooks]-&gt;-r /tmp/condaenv.qxtvoe3u.requirements.txt (line 2))
+  Downloading https://files.pythonhosted.org/packages/d0/79/79a4d167a31cc206117d9b396926615fa9c1fdbd52017bcced80937ac501/bcrypt-3.1.6-cp34-abi3-manylinux1_x86_64.whl (55kB)
+Collecting pynacl&gt;=1.0.1 (from paramiko&gt;=2.0.8-&gt;azureml-core==1.0.15.*-&gt;azureml-sdk[automl,explain,notebooks]-&gt;-r /tmp/condaenv.qxtvoe3u.requirements.txt (line 2))
+  Downloading https://files.pythonhosted.org/packages/27/15/2cd0a203f318c2240b42cd9dd13c931ddd61067809fee3479f44f086103e/PyNaCl-1.3.0-cp34-abi3-manylinux1_x86_64.whl (759kB)
+Collecting azure-mgmt-nspkg&gt;=2.0.0 (from azure-mgmt-keyvault&gt;=0.40.0-&gt;azureml-core==1.0.15.*-&gt;azureml-sdk[automl,explain,notebooks]-&gt;-r /tmp/condaenv.qxtvoe3u.requirements.txt (line 2))
+  Downloading https://files.pythonhosted.org/packages/b3/c2/af4b47845f27dc7d206ed4908b9e580f8bc94a4b2f3956a0d87c40719d90/azure_mgmt_nspkg-3.0.2-py3-none-any.whl
+Collecting asn1crypto&gt;=0.21.0 (from cryptography!=1.9,!=2.0.*,!=2.1.*,!=2.2.*-&gt;azureml-core==1.0.15.*-&gt;azureml-sdk[automl,explain,notebooks]-&gt;-r /tmp/condaenv.qxtvoe3u.requirements.txt (line 2))
+  Downloading https://files.pythonhosted.org/packages/ea/cd/35485615f45f30a510576f1a56d1e0a7ad7bd8ab5ed7cdc600ef7cd06222/asn1crypto-0.24.0-py2.py3-none-any.whl (101kB)
+Collecting cffi!=1.11.3,&gt;=1.8 (from cryptography!=1.9,!=2.0.*,!=2.1.*,!=2.2.*-&gt;azureml-core==1.0.15.*-&gt;azureml-sdk[automl,explain,notebooks]-&gt;-r /tmp/condaenv.qxtvoe3u.requirements.txt (line 2))
+  Downloading https://files.pythonhosted.org/packages/95/bd/dc75eae06a6c988c2d7c87f959e3c4410dcc3e262c653bffd13974296cbd/cffi-1.12.0-cp36-cp36m-manylinux1_x86_64.whl (428kB)
+Collecting backports.weakref (from backports.tempfile-&gt;azureml-core==1.0.15.*-&gt;azureml-sdk[automl,explain,notebooks]-&gt;-r /tmp/condaenv.qxtvoe3u.requirements.txt (line 2))
+  Downloading https://files.pythonhosted.org/packages/88/ec/f598b633c3d5ffe267aaada57d961c94fdfa183c5c3ebda2b6d151943db6/backports.weakref-1.0.post1-py2.py3-none-any.whl
+Collecting azureml-train-restclients-hyperdrive==1.0.15.* (from azureml-train-core==1.0.15.*-&gt;azureml-train==1.0.15.*-&gt;azureml-sdk[automl,explain,notebooks]-&gt;-r /tmp/condaenv.qxtvoe3u.requirements.txt (line 2))
+  Downloading https://files.pythonhosted.org/packages/10/7f/86b9b6d9aab19f63626ffbc7fed51187fd078c8aa95357b30252861acfa3/azureml_train_restclients_hyperdrive-1.0.15-py3-none-any.whl
+Collecting dotnetcore2==2.1.7 (from azureml-dataprep&lt;1.1.0,&gt;=0.5.2-&gt;azureml-train-automl==1.0.15.*; extra == &#34;automl&#34;-&gt;azureml-sdk[automl,explain,notebooks]-&gt;-r /tmp/condaenv.qxtvoe3u.requirements.txt (line 2))
+  Downloading https://files.pythonhosted.org/packages/5e/ad/563e291f291ddae9967fc6347b5240e5ee5fdb173c33e0780c30ca8cd4c2/dotnetcore2-2.1.7-py3-none-manylinux1_x86_64.whl (28.7MB)
+Collecting azureml-dataprep-native&lt;12.0.0,&gt;=11.2.1 (from azureml-dataprep&lt;1.1.0,&gt;=0.5.2-&gt;azureml-train-automl==1.0.15.*; extra == &#34;automl&#34;-&gt;azureml-sdk[automl,explain,notebooks]-&gt;-r /tmp/condaenv.qxtvoe3u.requirements.txt (line 2))
+  Downloading https://files.pythonhosted.org/packages/ea/ce/e849907d0cce5022014143f12add212afdc19a11f416d3440b3f3237b682/azureml_dataprep_native-11.2.1-cp36-cp36m-manylinux1_x86_64.whl (1.3MB)
+Collecting applicationinsights (from azureml-telemetry==1.0.15.*-&gt;azureml-train-automl==1.0.15.*; extra == &#34;automl&#34;-&gt;azureml-sdk[automl,explain,notebooks]-&gt;-r /tmp/condaenv.qxtvoe3u.requirements.txt (line 2))
+  Downloading https://files.pythonhosted.org/packages/e3/c8/7848a0dd85158930b859eb8be1e38fc76a91f0a040d491723ebb356d7358/applicationinsights-0.11.7-py2.py3-none-any.whl (56kB)
+Collecting JsonSir&gt;=0.0.2 (from resource&gt;=0.1.8-&gt;azureml-train-automl==1.0.15.*; extra == &#34;automl&#34;-&gt;azureml-sdk[automl,explain,notebooks]-&gt;-r /tmp/condaenv.qxtvoe3u.requirements.txt (line 2))
+  Downloading https://files.pythonhosted.org/packages/aa/bf/5c00c1dafaa3ca2c32e7641d9c2c6f9d6d76e127bde00eb600333a60c5bc/JsonSir-0.0.2.tar.gz
+Collecting python-easyconfig&gt;=0.1.0 (from resource&gt;=0.1.8-&gt;azureml-train-automl==1.0.15.*; extra == &#34;automl&#34;-&gt;azureml-sdk[automl,explain,notebooks]-&gt;-r /tmp/condaenv.qxtvoe3u.requirements.txt (line 2))
+  Downloading https://files.pythonhosted.org/packages/b1/86/1138081cca360a02066eedaf301d0f358c35e0e0d67572acf9d6354edca9/Python_EasyConfig-0.1.7-py2.py3-none-any.whl
+Collecting JsonForm&gt;=0.0.2 (from resource&gt;=0.1.8-&gt;azureml-train-automl==1.0.15.*; extra == &#34;automl&#34;-&gt;azureml-sdk[automl,explain,notebooks]-&gt;-r /tmp/condaenv.qxtvoe3u.requirements.txt (line 2))
+  Downloading https://files.pythonhosted.org/packages/4f/b7/b9491ba4b709d0616fab15a89f8efe4d3a7924652e1fdd4f15303e9ecdf0/JsonForm-0.0.2.tar.gz
+Collecting tensorboard&lt;1.13.0,&gt;=1.12.0 (from tensorflow&gt;=1.10.0-&gt;azureml-train-automl==1.0.15.*; extra == &#34;automl&#34;-&gt;azureml-sdk[automl,explain,notebooks]-&gt;-r /tmp/condaenv.qxtvoe3u.requirements.txt (line 2))
+  Downloading https://files.pythonhosted.org/packages/07/53/8d32ce9471c18f8d99028b7cef2e5b39ea8765bd7ef250ca05b490880971/tensorboard-1.12.2-py3-none-any.whl (3.0MB)
+Collecting astor&gt;=0.6.0 (from tensorflow&gt;=1.10.0-&gt;azureml-train-automl==1.0.15.*; extra == &#34;automl&#34;-&gt;azureml-sdk[automl,explain,notebooks]-&gt;-r /tmp/condaenv.qxtvoe3u.requirements.txt (line 2))
+  Downloading https://files.pythonhosted.org/packages/35/6b/11530768cac581a12952a2aad00e1526b89d242d0b9f59534ef6e6a1752f/astor-0.7.1-py2.py3-none-any.whl
+Collecting gast&gt;=0.2.0 (from tensorflow&gt;=1.10.0-&gt;azureml-train-automl==1.0.15.*; extra == &#34;automl&#34;-&gt;azureml-sdk[automl,explain,notebooks]-&gt;-r /tmp/condaenv.qxtvoe3u.requirements.txt (line 2))
+  Downloading https://files.pythonhosted.org/packages/4e/35/11749bf99b2d4e3cceb4d55ca22590b0d7c2c62b9de38ac4a4a7f4687421/gast-0.2.2.tar.gz
+Collecting termcolor&gt;=1.1.0 (from tensorflow&gt;=1.10.0-&gt;azureml-train-automl==1.0.15.*; extra == &#34;automl&#34;-&gt;azureml-sdk[automl,explain,notebooks]-&gt;-r /tmp/condaenv.qxtvoe3u.requirements.txt (line 2))
+  Downloading https://files.pythonhosted.org/packages/8a/48/a76be51647d0eb9f10e2a4511bf3ffb8cc1e6b14e9e4fab46173aa79f981/termcolor-1.1.0.tar.gz
+Collecting keras-applications&gt;=1.0.6 (from tensorflow&gt;=1.10.0-&gt;azureml-train-automl==1.0.15.*; extra == &#34;automl&#34;-&gt;azureml-sdk[automl,explain,notebooks]-&gt;-r /tmp/condaenv.qxtvoe3u.requirements.txt (line 2))
+  Downloading https://files.pythonhosted.org/packages/90/85/64c82949765cfb246bbdaf5aca2d55f400f792655927a017710a78445def/Keras_Applications-1.0.7-py2.py3-none-any.whl (51kB)
+Collecting grpcio&gt;=1.8.6 (from tensorflow&gt;=1.10.0-&gt;azureml-train-automl==1.0.15.*; extra == &#34;automl&#34;-&gt;azureml-sdk[automl,explain,notebooks]-&gt;-r /tmp/condaenv.qxtvoe3u.requirements.txt (line 2))
+  Downloading https://files.pythonhosted.org/packages/51/a3/489ce6a67047263e9b0da8784b2925c4f89b688a6e33073c5bb6c4c2867f/grpcio-1.18.0-cp36-cp36m-manylinux1_x86_64.whl (10.6MB)
+Collecting keras-preprocessing&gt;=1.0.5 (from tensorflow&gt;=1.10.0-&gt;azureml-train-automl==1.0.15.*; extra == &#34;automl&#34;-&gt;azureml-sdk[automl,explain,notebooks]-&gt;-r /tmp/condaenv.qxtvoe3u.requirements.txt (line 2))
+  Downloading https://files.pythonhosted.org/packages/c0/bf/0315ef6a9fd3fc2346e85b0ff1f5f83ca17073f2c31ac719ab2e4da0d4a3/Keras_Preprocessing-1.0.9-py2.py3-none-any.whl (59kB)
+Collecting absl-py&gt;=0.1.6 (from tensorflow&gt;=1.10.0-&gt;azureml-train-automl==1.0.15.*; extra == &#34;automl&#34;-&gt;azureml-sdk[automl,explain,notebooks]-&gt;-r /tmp/condaenv.qxtvoe3u.requirements.txt (line 2))
+  Downloading https://files.pythonhosted.org/packages/31/bc/ab68120d1d89ae23b694a55fe2aece2f91194313b71f9b05a80b32d3c24b/absl-py-0.7.0.tar.gz (96kB)
+Collecting protobuf&gt;=3.6.1 (from tensorflow&gt;=1.10.0-&gt;azureml-train-automl==1.0.15.*; extra == &#34;automl&#34;-&gt;azureml-sdk[automl,explain,notebooks]-&gt;-r /tmp/condaenv.qxtvoe3u.requirements.txt (line 2))
+  Downloading https://files.pythonhosted.org/packages/c2/f9/28787754923612ca9bfdffc588daa05580ed70698add063a5629d1a4209d/protobuf-3.6.1-cp36-cp36m-manylinux1_x86_64.whl (1.1MB)
+Collecting matplotlib (from shap&lt;=0.26.0,&gt;=0.20.0-&gt;azureml-explain-model==1.0.15.*; extra == &#34;explain&#34;-&gt;azureml-sdk[automl,explain,notebooks]-&gt;-r /tmp/condaenv.qxtvoe3u.requirements.txt (line 2))
+  Downloading https://files.pythonhosted.org/packages/71/07/16d781df15be30df4acfd536c479268f1208b2dfbc91e9ca5d92c9caf673/matplotlib-3.0.2-cp36-cp36m-manylinux1_x86_64.whl (12.9MB)
+Collecting tqdm (from shap&lt;=0.26.0,&gt;=0.20.0-&gt;azureml-explain-model==1.0.15.*; extra == &#34;explain&#34;-&gt;azureml-sdk[automl,explain,notebooks]-&gt;-r /tmp/condaenv.qxtvoe3u.requirements.txt (line 2))
+  Downloading https://files.pythonhosted.org/packages/6c/4b/c38b5144cf167c4f52288517436ccafefe9dc01b8d1c190e18a6b154cd4a/tqdm-4.31.1-py2.py3-none-any.whl (48kB)
+Requirement already satisfied: ipython in /opt/conda/envs/aml-sdk-conda-env/lib/python3.6/site-packages (from shap&lt;=0.26.0,&gt;=0.20.0-&gt;azureml-explain-model==1.0.15.*; extra == &#34;explain&#34;-&gt;azureml-sdk[automl,explain,notebooks]-&gt;-r /tmp/condaenv.qxtvoe3u.requirements.txt (line 2)) (7.2.0)
+Requirement already satisfied: ipykernel&gt;=4.5.1 in /opt/conda/envs/aml-sdk-conda-env/lib/python3.6/site-packages (from ipywidgets&gt;=7.0.0-&gt;azureml-widgets==1.0.15.*; extra == &#34;notebooks&#34;-&gt;azureml-sdk[automl,explain,notebooks]-&gt;-r /tmp/condaenv.qxtvoe3u.requirements.txt (line 2)) (5.1.0)
+Collecting widgetsnbextension~=3.4.0 (from ipywidgets&gt;=7.0.0-&gt;azureml-widgets==1.0.15.*; extra == &#34;notebooks&#34;-&gt;azureml-sdk[automl,explain,notebooks]-&gt;-r /tmp/condaenv.qxtvoe3u.requirements.txt (line 2))
+  Downloading https://files.pythonhosted.org/packages/8a/81/35789a3952afb48238289171728072d26d6e76649ddc8b3588657a2d78c1/widgetsnbextension-3.4.2-py2.py3-none-any.whl (2.2MB)
+Requirement already satisfied: nbformat&gt;=4.2.0 in /opt/conda/envs/aml-sdk-conda-env/lib/python3.6/site-packages (from ipywidgets&gt;=7.0.0-&gt;azureml-widgets==1.0.15.*; extra == &#34;notebooks&#34;-&gt;azureml-sdk[automl,explain,notebooks]-&gt;-r /tmp/condaenv.qxtvoe3u.requirements.txt (line 2)) (4.4.0)
+Requirement already satisfied: traitlets&gt;=4.3.1 in /opt/conda/envs/aml-sdk-conda-env/lib/python3.6/site-packages (from ipywidgets&gt;=7.0.0-&gt;azureml-widgets==1.0.15.*; extra == &#34;notebooks&#34;-&gt;azureml-sdk[automl,explain,notebooks]-&gt;-r /tmp/condaenv.qxtvoe3u.requirements.txt (line 2)) (4.3.2)
+Collecting oauthlib&gt;=3.0.0 (from requests-oauthlib&gt;=0.5.0-&gt;msrest&gt;=0.5.1-&gt;azureml-core==1.0.15.*-&gt;azureml-sdk[automl,explain,notebooks]-&gt;-r /tmp/condaenv.qxtvoe3u.requirements.txt (line 2))
+  Downloading https://files.pythonhosted.org/packages/16/95/699466b05b72b94a41f662dc9edf87fda4289e3602ecd42d27fcaddf7b56/oauthlib-3.0.1-py2.py3-none-any.whl (142kB)
+Collecting pycparser (from cffi!=1.11.3,&gt;=1.8-&gt;cryptography!=1.9,!=2.0.*,!=2.1.*,!=2.2.*-&gt;azureml-core==1.0.15.*-&gt;azureml-sdk[automl,explain,notebooks]-&gt;-r /tmp/condaenv.qxtvoe3u.requirements.txt (line 2))
+  Downloading https://files.pythonhosted.org/packages/68/9e/49196946aee219aead1290e00d1e7fdeab8567783e83e1b9ab5585e6206a/pycparser-2.19.tar.gz (158kB)
+Collecting distro&gt;=1.2.0 (from dotnetcore2==2.1.7-&gt;azureml-dataprep&lt;1.1.0,&gt;=0.5.2-&gt;azureml-train-automl==1.0.15.*; extra == &#34;automl&#34;-&gt;azureml-sdk[automl,explain,notebooks]-&gt;-r /tmp/condaenv.qxtvoe3u.requirements.txt (line 2))
+  Downloading https://files.pythonhosted.org/packages/ea/35/82f79b92fa4d937146c660a6482cee4f3dfa1f97ff3d2a6f3ecba33e712e/distro-1.4.0-py2.py3-none-any.whl
+Requirement already satisfied: jsonschema in /opt/conda/envs/aml-sdk-conda-env/lib/python3.6/site-packages (from JsonForm&gt;=0.0.2-&gt;resource&gt;=0.1.8-&gt;azureml-train-automl==1.0.15.*; extra == &#34;automl&#34;-&gt;azureml-sdk[automl,explain,notebooks]-&gt;-r /tmp/condaenv.qxtvoe3u.requirements.txt (line 2)) (2.6.0)
+Collecting markdown&gt;=2.6.8 (from tensorboard&lt;1.13.0,&gt;=1.12.0-&gt;tensorflow&gt;=1.10.0-&gt;azureml-train-automl==1.0.15.*; extra == &#34;automl&#34;-&gt;azureml-sdk[automl,explain,notebooks]-&gt;-r /tmp/condaenv.qxtvoe3u.requirements.txt (line 2))
+  Downloading https://files.pythonhosted.org/packages/7a/6b/5600647404ba15545ec37d2f7f58844d690baf2f81f3a60b862e48f29287/Markdown-3.0.1-py2.py3-none-any.whl (89kB)
+Collecting werkzeug&gt;=0.11.10 (from tensorboard&lt;1.13.0,&gt;=1.12.0-&gt;tensorflow&gt;=1.10.0-&gt;azureml-train-automl==1.0.15.*; extra == &#34;automl&#34;-&gt;azureml-sdk[automl,explain,notebooks]-&gt;-r /tmp/condaenv.qxtvoe3u.requirements.txt (line 2))
+  Downloading https://files.pythonhosted.org/packages/20/c4/12e3e56473e52375aa29c4764e70d1b8f3efa6682bef8d0aae04fe335243/Werkzeug-0.14.1-py2.py3-none-any.whl (322kB)
+Collecting h5py (from keras-applications&gt;=1.0.6-&gt;tensorflow&gt;=1.10.0-&gt;azureml-train-automl==1.0.15.*; extra == &#34;automl&#34;-&gt;azureml-sdk[automl,explain,notebooks]-&gt;-r /tmp/condaenv.qxtvoe3u.requirements.txt (line 2))
+  Downloading https://files.pythonhosted.org/packages/30/99/d7d4fbf2d02bb30fb76179911a250074b55b852d34e98dd452a9f394ac06/h5py-2.9.0-cp36-cp36m-manylinux1_x86_64.whl (2.8MB)
+Requirement already satisfied: setuptools in /opt/conda/envs/aml-sdk-conda-env/lib/python3.6/site-packages (from protobuf&gt;=3.6.1-&gt;tensorflow&gt;=1.10.0-&gt;azureml-train-automl==1.0.15.*; extra == &#34;automl&#34;-&gt;azureml-sdk[automl,explain,notebooks]-&gt;-r /tmp/condaenv.qxtvoe3u.requirements.txt (line 2)) (40.7.3)
+Collecting cycler&gt;=0.10 (from matplotlib-&gt;shap&lt;=0.26.0,&gt;=0.20.0-&gt;azureml-explain-model==1.0.15.*; extra == &#34;explain&#34;-&gt;azureml-sdk[automl,explain,notebooks]-&gt;-r /tmp/condaenv.qxtvoe3u.requirements.txt (line 2))
+  Downloading https://files.pythonhosted.org/packages/f7/d2/e07d3ebb2bd7af696440ce7e754c59dd546ffe1bbe732c8ab68b9c834e61/cycler-0.10.0-py2.py3-none-any.whl
+Collecting pyparsing!=2.0.4,!=2.1.2,!=2.1.6,&gt;=2.0.1 (from matplotlib-&gt;shap&lt;=0.26.0,&gt;=0.20.0-&gt;azureml-explain-model==1.0.15.*; extra == &#34;explain&#34;-&gt;azureml-sdk[automl,explain,notebooks]-&gt;-r /tmp/condaenv.qxtvoe3u.requirements.txt (line 2))
+  Downloading https://files.pythonhosted.org/packages/de/0a/001be530836743d8be6c2d85069f46fecf84ac6c18c7f5fb8125ee11d854/pyparsing-2.3.1-py2.py3-none-any.whl (61kB)
+Collecting kiwisolver&gt;=1.0.1 (from matplotlib-&gt;shap&lt;=0.26.0,&gt;=0.20.0-&gt;azureml-explain-model==1.0.15.*; extra == &#34;explain&#34;-&gt;azureml-sdk[automl,explain,notebooks]-&gt;-r /tmp/condaenv.qxtvoe3u.requirements.txt (line 2))
+  Downloading https://files.pythonhosted.org/packages/69/a7/88719d132b18300b4369fbffa741841cfd36d1e637e1990f27929945b538/kiwisolver-1.0.1-cp36-cp36m-manylinux1_x86_64.whl (949kB)
+Requirement already satisfied: pygments in /opt/conda/envs/aml-sdk-conda-env/lib/python3.6/site-packages (from ipython-&gt;shap&lt;=0.26.0,&gt;=0.20.0-&gt;azureml-explain-model==1.0.15.*; extra == &#34;explain&#34;-&gt;azureml-sdk[automl,explain,notebooks]-&gt;-r /tmp/condaenv.qxtvoe3u.requirements.txt (line 2)) (2.3.1)
+Requirement already satisfied: prompt-toolkit&lt;2.1.0,&gt;=2.0.0 in /opt/conda/envs/aml-sdk-conda-env/lib/python3.6/site-packages (from ipython-&gt;shap&lt;=0.26.0,&gt;=0.20.0-&gt;azureml-explain-model==1.0.15.*; extra == &#34;explain&#34;-&gt;azureml-sdk[automl,explain,notebooks]-&gt;-r /tmp/condaenv.qxtvoe3u.requirements.txt (line 2)) (2.0.8)
+Requirement already satisfied: pickleshare in /opt/conda/envs/aml-sdk-conda-env/lib/python3.6/site-packages (from ipython-&gt;shap&lt;=0.26.0,&gt;=0.20.0-&gt;azureml-explain-model==1.0.15.*; extra == &#34;explain&#34;-&gt;azureml-sdk[automl,explain,notebooks]-&gt;-r /tmp/condaenv.qxtvoe3u.requirements.txt (line 2)) (0.7.5)
+Requirement already satisfied: backcall in /opt/conda/envs/aml-sdk-conda-env/lib/python3.6/site-packages (from ipython-&gt;shap&lt;=0.26.0,&gt;=0.20.0-&gt;azureml-explain-model==1.0.15.*; extra == &#34;explain&#34;-&gt;azureml-sdk[automl,explain,notebooks]-&gt;-r /tmp/condaenv.qxtvoe3u.requirements.txt (line 2)) (0.1.0)
+Requirement already satisfied: decorator in /opt/conda/envs/aml-sdk-conda-env/lib/python3.6/site-packages (from ipython-&gt;shap&lt;=0.26.0,&gt;=0.20.0-&gt;azureml-explain-model==1.0.15.*; extra == &#34;explain&#34;-&gt;azureml-sdk[automl,explain,notebooks]-&gt;-r /tmp/condaenv.qxtvoe3u.requirements.txt (line 2)) (4.3.2)
+Requirement already satisfied: jedi&gt;=0.10 in /opt/conda/envs/aml-sdk-conda-env/lib/python3.6/site-packages (from ipython-&gt;shap&lt;=0.26.0,&gt;=0.20.0-&gt;azureml-explain-model==1.0.15.*; extra == &#34;explain&#34;-&gt;azureml-sdk[automl,explain,notebooks]-&gt;-r /tmp/condaenv.qxtvoe3u.requirements.txt (line 2)) (0.13.2)
+Requirement already satisfied: pexpect; sys_platform != &#34;win32&#34; in /opt/conda/envs/aml-sdk-conda-env/lib/python3.6/site-packages (from ipython-&gt;shap&lt;=0.26.0,&gt;=0.20.0-&gt;azureml-explain-model==1.0.15.*; extra == &#34;explain&#34;-&gt;azureml-sdk[automl,explain,notebooks]-&gt;-r /tmp/condaenv.qxtvoe3u.requirements.txt (line 2)) (4.6.0)
+Requirement already satisfied: jupyter-client in /opt/conda/envs/aml-sdk-conda-env/lib/python3.6/site-packages (from ipykernel&gt;=4.5.1-&gt;ipywidgets&gt;=7.0.0-&gt;azureml-widgets==1.0.15.*; extra == &#34;notebooks&#34;-&gt;azureml-sdk[automl,explain,notebooks]-&gt;-r /tmp/condaenv.qxtvoe3u.requirements.txt (line 2)) (5.2.4)
+Requirement already satisfied: tornado&gt;=4.2 in /opt/conda/envs/aml-sdk-conda-env/lib/python3.6/site-packages (from ipykernel&gt;=4.5.1-&gt;ipywidgets&gt;=7.0.0-&gt;azureml-widgets==1.0.15.*; extra == &#34;notebooks&#34;-&gt;azureml-sdk[automl,explain,notebooks]-&gt;-r /tmp/condaenv.qxtvoe3u.requirements.txt (line 2)) (5.1.1)
+Requirement already satisfied: notebook&gt;=4.4.1 in /opt/conda/envs/aml-sdk-conda-env/lib/python3.6/site-packages (from widgetsnbextension~=3.4.0-&gt;ipywidgets&gt;=7.0.0-&gt;azureml-widgets==1.0.15.*; extra == &#34;notebooks&#34;-&gt;azureml-sdk[automl,explain,notebooks]-&gt;-r /tmp/condaenv.qxtvoe3u.requirements.txt (line 2)) (5.7.4)
+Requirement already satisfied: jupyter-core in /opt/conda/envs/aml-sdk-conda-env/lib/python3.6/site-packages (from nbformat&gt;=4.2.0-&gt;ipywidgets&gt;=7.0.0-&gt;azureml-widgets==1.0.15.*; extra == &#34;notebooks&#34;-&gt;azureml-sdk[automl,explain,notebooks]-&gt;-r /tmp/condaenv.qxtvoe3u.requirements.txt (line 2)) (4.4.0)
+Requirement already satisfied: ipython-genutils in /opt/conda/envs/aml-sdk-conda-env/lib/python3.6/site-packages (from nbformat&gt;=4.2.0-&gt;ipywidgets&gt;=7.0.0-&gt;azureml-widgets==1.0.15.*; extra == &#34;notebooks&#34;-&gt;azureml-sdk[automl,explain,notebooks]-&gt;-r /tmp/condaenv.qxtvoe3u.requirements.txt (line 2)) (0.2.0)
+Requirement already satisfied: wcwidth in /opt/conda/envs/aml-sdk-conda-env/lib/python3.6/site-packages (from prompt-toolkit&lt;2.1.0,&gt;=2.0.0-&gt;ipython-&gt;shap&lt;=0.26.0,&gt;=0.20.0-&gt;azureml-explain-model==1.0.15.*; extra == &#34;explain&#34;-&gt;azureml-sdk[automl,explain,notebooks]-&gt;-r /tmp/condaenv.qxtvoe3u.requirements.txt (line 2)) (0.1.7)
+Requirement already satisfied: parso&gt;=0.3.0 in /opt/conda/envs/aml-sdk-conda-env/lib/python3.6/site-packages (from jedi&gt;=0.10-&gt;ipython-&gt;shap&lt;=0.26.0,&gt;=0.20.0-&gt;azureml-explain-model==1.0.15.*; extra == &#34;explain&#34;-&gt;azureml-sdk[automl,explain,notebooks]-&gt;-r /tmp/condaenv.qxtvoe3u.requirements.txt (line 2)) (0.3.2)
+Requirement already satisfied: ptyprocess&gt;=0.5 in /opt/conda/envs/aml-sdk-conda-env/lib/python3.6/site-packages (from pexpect; sys_platform != &#34;win32&#34;-&gt;ipython-&gt;shap&lt;=0.26.0,&gt;=0.20.0-&gt;azureml-explain-model==1.0.15.*; extra == &#34;explain&#34;-&gt;azureml-sdk[automl,explain,notebooks]-&gt;-r /tmp/condaenv.qxtvoe3u.requirements.txt (line 2)) (0.6.0)
+Requirement already satisfied: pyzmq&gt;=13 in /opt/conda/envs/aml-sdk-conda-env/lib/python3.6/site-packages (from jupyter-client-&gt;ipykernel&gt;=4.5.1-&gt;ipywidgets&gt;=7.0.0-&gt;azureml-widgets==1.0.15.*; extra == &#34;notebooks&#34;-&gt;azureml-sdk[automl,explain,notebooks]-&gt;-r /tmp/condaenv.qxtvoe3u.requirements.txt (line 2)) (17.1.2)
+Requirement already satisfied: Send2Trash in /opt/conda/envs/aml-sdk-conda-env/lib/python3.6/site-packages (from notebook&gt;=4.4.1-&gt;widgetsnbextension~=3.4.0-&gt;ipywidgets&gt;=7.0.0-&gt;azureml-widgets==1.0.15.*; extra == &#34;notebooks&#34;-&gt;azureml-sdk[automl,explain,notebooks]-&gt;-r /tmp/condaenv.qxtvoe3u.requirements.txt (line 2)) (1.5.0)
+Requirement already satisfied: nbconvert in /opt/conda/envs/aml-sdk-conda-env/lib/python3.6/site-packages (from notebook&gt;=4.4.1-&gt;widgetsnbextension~=3.4.0-&gt;ipywidgets&gt;=7.0.0-&gt;azureml-widgets==1.0.15.*; extra == &#34;notebooks&#34;-&gt;azureml-sdk[automl,explain,notebooks]-&gt;-r /tmp/condaenv.qxtvoe3u.requirements.txt (line 2)) (5.3.1)
+Requirement already satisfied: terminado&gt;=0.8.1 in /opt/conda/envs/aml-sdk-conda-env/lib/python3.6/site-packages (from notebook&gt;=4.4.1-&gt;widgetsnbextension~=3.4.0-&gt;ipywidgets&gt;=7.0.0-&gt;azureml-widgets==1.0.15.*; extra == &#34;notebooks&#34;-&gt;azureml-sdk[automl,explain,notebooks]-&gt;-r /tmp/condaenv.qxtvoe3u.requirements.txt (line 2)) (0.8.1)
+Requirement already satisfied: jinja2 in /opt/conda/envs/aml-sdk-conda-env/lib/python3.6/site-packages (from notebook&gt;=4.4.1-&gt;widgetsnbextension~=3.4.0-&gt;ipywidgets&gt;=7.0.0-&gt;azureml-widgets==1.0.15.*; extra == &#34;notebooks&#34;-&gt;azureml-sdk[automl,explain,notebooks]-&gt;-r /tmp/condaenv.qxtvoe3u.requirements.txt (line 2)) (2.10)
+Requirement already satisfied: prometheus-client in /opt/conda/envs/aml-sdk-conda-env/lib/python3.6/site-packages (from notebook&gt;=4.4.1-&gt;widgetsnbextension~=3.4.0-&gt;ipywidgets&gt;=7.0.0-&gt;azureml-widgets==1.0.15.*; extra == &#34;notebooks&#34;-&gt;azureml-sdk[automl,explain,notebooks]-&gt;-r /tmp/condaenv.qxtvoe3u.requirements.txt (line 2)) (0.5.0)
+Requirement already satisfied: pandocfilters&gt;=1.4.1 in /opt/conda/envs/aml-sdk-conda-env/lib/python3.6/site-packages (from nbconvert-&gt;notebook&gt;=4.4.1-&gt;widgetsnbextension~=3.4.0-&gt;ipywidgets&gt;=7.0.0-&gt;azureml-widgets==1.0.15.*; extra == &#34;notebooks&#34;-&gt;azureml-sdk[automl,explain,notebooks]-&gt;-r /tmp/condaenv.qxtvoe3u.requirements.txt (line 2)) (1.4.2)
+Requirement already satisfied: entrypoints&gt;=0.2.2 in /opt/conda/envs/aml-sdk-conda-env/lib/python3.6/site-packages (from nbconvert-&gt;notebook&gt;=4.4.1-&gt;widgetsnbextension~=3.4.0-&gt;ipywidgets&gt;=7.0.0-&gt;azureml-widgets==1.0.15.*; extra == &#34;notebooks&#34;-&gt;azureml-sdk[automl,explain,notebooks]-&gt;-r /tmp/condaenv.qxtvoe3u.requirements.txt (line 2)) (0.3)
+Requirement already satisfied: testpath in /opt/conda/envs/aml-sdk-conda-env/lib/python3.6/site-packages (from nbconvert-&gt;notebook&gt;=4.4.1-&gt;widgetsnbextension~=3.4.0-&gt;ipywidgets&gt;=7.0.0-&gt;azureml-widgets==1.0.15.*; extra == &#34;notebooks&#34;-&gt;azureml-sdk[automl,explain,notebooks]-&gt;-r /tmp/condaenv.qxtvoe3u.requirements.txt (line 2)) (0.4.2)
+Requirement already satisfied: mistune&gt;=0.7.4 in /opt/conda/envs/aml-sdk-conda-env/lib/python3.6/site-packages (from nbconvert-&gt;notebook&gt;=4.4.1-&gt;widgetsnbextension~=3.4.0-&gt;ipywidgets&gt;=7.0.0-&gt;azureml-widgets==1.0.15.*; extra == &#34;notebooks&#34;-&gt;azureml-sdk[automl,explain,notebooks]-&gt;-r /tmp/condaenv.qxtvoe3u.requirements.txt (line 2)) (0.8.4)
+Requirement already satisfied: bleach in /opt/conda/envs/aml-sdk-conda-env/lib/python3.6/site-packages (from nbconvert-&gt;notebook&gt;=4.4.1-&gt;widgetsnbextension~=3.4.0-&gt;ipywidgets&gt;=7.0.0-&gt;azureml-widgets==1.0.15.*; extra == &#34;notebooks&#34;-&gt;azureml-sdk[automl,explain,notebooks]-&gt;-r /tmp/condaenv.qxtvoe3u.requirements.txt (line 2)) (3.1.0)
+Requirement already satisfied: MarkupSafe&gt;=0.23 in /opt/conda/envs/aml-sdk-conda-env/lib/python3.6/site-packages (from jinja2-&gt;notebook&gt;=4.4.1-&gt;widgetsnbextension~=3.4.0-&gt;ipywidgets&gt;=7.0.0-&gt;azureml-widgets==1.0.15.*; extra == &#34;notebooks&#34;-&gt;azureml-sdk[automl,explain,notebooks]-&gt;-r /tmp/condaenv.qxtvoe3u.requirements.txt (line 2)) (1.1.0)
+Requirement already satisfied: webencodings in /opt/conda/envs/aml-sdk-conda-env/lib/python3.6/site-packages (from bleach-&gt;nbconvert-&gt;notebook&gt;=4.4.1-&gt;widgetsnbextension~=3.4.0-&gt;ipywidgets&gt;=7.0.0-&gt;azureml-widgets==1.0.15.*; extra == &#34;notebooks&#34;-&gt;azureml-sdk[automl,explain,notebooks]-&gt;-r /tmp/condaenv.qxtvoe3u.requirements.txt (line 2)) (0.5.1)
+Building wheels for collected packages: pathspec, SecretStorage, pyyaml, dill, shap, JsonSir, JsonForm, gast, termcolor, absl-py, pycparser
+  Building wheel for pathspec (setup.py): started
+  Building wheel for pathspec (setup.py): finished with status &#39;done&#39;
+  Stored in directory: /root/.cache/pip/wheels/45/cb/7e/ce6e6062c69446e39e328170524ca8213498bc66a74c6a210b
+  Building wheel for SecretStorage (setup.py): started
+  Building wheel for SecretStorage (setup.py): finished with status &#39;done&#39;
+  Stored in directory: /root/.cache/pip/wheels/4e/5b/1b/be8c8a830a0243af85b2946a0aece2c6743d7f7f946977ed67
+  Building wheel for pyyaml (setup.py): started
+  Building wheel for pyyaml (setup.py): finished with status &#39;done&#39;
+  Stored in directory: /root/.cache/pip/wheels/ad/da/0c/74eb680767247273e2cf2723482cb9c924fe70af57c334513f
+  Building wheel for dill (setup.py): started
+  Building wheel for dill (setup.py): finished with status &#39;done&#39;
+  Stored in directory: /root/.cache/pip/wheels/5b/d7/0f/e58eae695403de585269f4e4a94e0cd6ca60ec0c202936fa4a
+  Building wheel for shap (setup.py): started
+  Building wheel for shap (setup.py): finished with status &#39;done&#39;
+  Stored in directory: /root/.cache/pip/wheels/21/88/00/697879eab372b1071f60675adf91f6da0ae015313318b35421
+  Building wheel for JsonSir (setup.py): started
+  Building wheel for JsonSir (setup.py): finished with status &#39;done&#39;
+  Stored in directory: /root/.cache/pip/wheels/ee/30/5c/3a3b5e1386c8db9a3be5f5c3933644ae0533c1351c6a8eb4b5
+  Building wheel for JsonForm (setup.py): started
+  Building wheel for JsonForm (setup.py): finished with status &#39;done&#39;
+  Stored in directory: /root/.cache/pip/wheels/e8/74/51/42c2d41c02bdc6f0e604476b7e4293b8c98d0bcbfa1dff78c8
+  Building wheel for gast (setup.py): started
+  Building wheel for gast (setup.py): finished with status &#39;done&#39;
+  Stored in directory: /root/.cache/pip/wheels/5c/2e/7e/a1d4d4fcebe6c381f378ce7743a3ced3699feb89bcfbdadadd
+  Building wheel for termcolor (setup.py): started
+  Building wheel for termcolor (setup.py): finished with status &#39;done&#39;
+  Stored in directory: /root/.cache/pip/wheels/7c/06/54/bc84598ba1daf8f970247f550b175aaaee85f68b4b0c5ab2c6
+  Building wheel for absl-py (setup.py): started
+  Building wheel for absl-py (setup.py): finished with status &#39;done&#39;
+  Stored in directory: /root/.cache/pip/wheels/90/db/f8/2c3101f72ef1ad434e4662853174126ce30201a3e163dcbeca
+  Building wheel for pycparser (setup.py): started
+  Building wheel for pycparser (setup.py): finished with status &#39;done&#39;
+  Stored in directory: /root/.cache/pip/wheels/f2/9a/90/de94f8556265ddc9d9c8b271b0f63e57b26fb1d67a45564511
+Successfully built pathspec SecretStorage pyyaml dill shap JsonSir JsonForm gast termcolor absl-py pycparser
+Installing collected packages: python-dotenv, pytz, pathspec, chardet, idna, urllib3, requests, oauthlib, requests-oauthlib, isodate, msrest, asn1crypto, pycparser, cffi, cryptography, PyJWT, adal, msrestazure, azure-common, azure-mgmt-resource, azure-nspkg, azure-storage-nspkg, ruamel.yaml, websocket-client, docker-pycreds, docker, SecretStorage, pyyaml, azure-storage-common, azure-mgmt-storage, contextlib2, azure-storage-blob, azure-graphrbac, jmespath, pyasn1, pyopenssl, ndg-httpsclient, colorama, jsonpickle, bcrypt, pynacl, paramiko, azure-mgmt-containerregistry, azure-mgmt-nspkg, azure-mgmt-keyvault, azure-mgmt-authorization, backports.weakref, backports.tempfile, azureml-core, applicationinsights, azureml-telemetry, azureml-train-restclients-hyperdrive, azureml-train-core, azureml-train, azureml-pipeline-core, azureml-pipeline-steps, azureml-pipeline, distro, dotnetcore2, azureml-dataprep-native, numpy, pandas, azureml-dataprep, scipy, scikit-learn, lightgbm, dill, JsonSir, python-easyconfig, JsonForm, resource, grpcio, protobuf, wheel, markdown, werkzeug, tensorboard, astor, gast, termcolor, h5py, keras-applications, keras-preprocessing, absl-py, tensorflow, sklearn-pandas, azureml-train-automl, cycler, pyparsing, kiwisolver, matplotlib, tqdm, shap, azureml-explain-model, widgetsnbextension, ipywidgets, azureml-widgets, azureml-sdk
+  Found existing installation: numpy 1.15.4
+    Uninstalling numpy-1.15.4:
+      Successfully uninstalled numpy-1.15.4
+  Found existing installation: scipy 1.2.0
+    Uninstalling scipy-1.2.0:
+      Successfully uninstalled scipy-1.2.0
+  Found existing installation: scikit-learn 0.20.2
+    Uninstalling scikit-learn-0.20.2:
+      Successfully uninstalled scikit-learn-0.20.2
+  Found existing installation: wheel 0.32.3
+    Uninstalling wheel-0.32.3:
+      Successfully uninstalled wheel-0.32.3
+Successfully installed JsonForm-0.0.2 JsonSir-0.0.2 PyJWT-1.7.1 SecretStorage-2.3.1 absl-py-0.7.0 adal-1.2.1 applicationinsights-0.11.7 asn1crypto-0.24.0 astor-0.7.1 azure-common-1.1.18 azure-graphrbac-0.53.0 azure-mgmt-authorization-0.51.1 azure-mgmt-containerregistry-2.7.0 azure-mgmt-keyvault-1.1.0 azure-mgmt-nspkg-3.0.2 azure-mgmt-resource-2.1.0 azure-mgmt-storage-3.1.1 azure-nspkg-3.0.2 azure-storage-blob-1.5.0 azure-storage-common-1.4.0 azure-storage-nspkg-3.1.0 azureml-core-1.0.15 azureml-dataprep-1.0.12 azureml-dataprep-native-11.2.1 azureml-explain-model-1.0.15 azureml-pipeline-1.0.15 azureml-pipeline-core-1.0.15 azureml-pipeline-steps-1.0.15 azureml-sdk-1.0.15.1 azureml-telemetry-1.0.15 azureml-train-1.0.15 azureml-train-automl-1.0.15 azureml-train-core-1.0.15 azureml-train-restclients-hyperdrive-1.0.15 azureml-widgets-1.0.15 backports.tempfile-1.0 backports.weakref-1.0.post1 bcrypt-3.1.6 cffi-1.12.0 chardet-3.0.4 colorama-0.4.1 contextlib2-0.5.5 cryptography-2.5 cycler-0.10.0 dill-0.2.9 distro-1.4.0 docker-3.7.0 docker-pycreds-0.4.0 dotnetcore2-2.1.7 gast-0.2.2 grpcio-1.18.0 h5py-2.9.0 idna-2.8 ipywidgets-7.4.2 isodate-0.6.0 jmespath-0.9.3 jsonpickle-1.1 keras-applications-1.0.7 keras-preprocessing-1.0.9 kiwisolver-1.0.1 lightgbm-2.2.1 markdown-3.0.1 matplotlib-3.0.2 msrest-0.6.4 msrestazure-0.6.0 ndg-httpsclient-0.5.1 numpy-1.14.6 oauthlib-3.0.1 pandas-0.23.4 paramiko-2.4.2 pathspec-0.5.9 protobuf-3.6.1 pyasn1-0.4.5 pycparser-2.19 pynacl-1.3.0 pyopenssl-19.0.0 pyparsing-2.3.1 python-dotenv-0.10.1 python-easyconfig-0.1.7 pytz-2018.9 pyyaml-3.13 requests-2.21.0 requests-oauthlib-1.2.0 resource-0.2.1 ruamel.yaml-0.15.51 scikit-learn-0.19.1 scipy-1.1.0 shap-0.26.0 sklearn-pandas-1.7.0 tensorboard-1.12.2 tensorflow-1.12.0 termcolor-1.1.0 tqdm-4.31.1 urllib3-1.23 websocket-client-0.54.0 werkzeug-0.14.1 wheel-0.30.0 widgetsnbextension-3.4.2
 Cache location: /opt/conda/pkgs
 Will remove the following tarballs:
 
 /opt/conda/pkgs
 ---------------
-zeromq-4.2.5-hf484d3e_1.tar.bz2              567 KB
+notebook-5.7.4-py36_0.tar.bz2                7.2 MB
+decorator-4.3.2-py36_0.tar.bz2                17 KB
 pickleshare-0.7.5-py36_0.tar.bz2              13 KB
-mkl_random-1.0.1-py36h4414c95_1.tar.bz2      373 KB
-numpy-1.15.4-py36h1d66e8a_0.tar.bz2           35 KB
-six-1.11.0-py36_1.tar.bz2                     21 KB
 ipython-7.2.0-py36h39e3cac_0.tar.bz2         1.0 MB
-jupyter_client-5.2.3-py36_0.tar.bz2          124 KB
-decorator-4.3.0-py36_0.tar.bz2                15 KB
+pygments-2.3.1-py36_0.tar.bz2                1.4 MB
+six-1.12.0-py36_0.tar.bz2                     22 KB
 tornado-5.1.1-py36h7b6447c_0.tar.bz2         663 KB
-nb_conda_kernels-2.2.0-py36_0.tar.bz2         32 KB
 readline-7.0-h7b6447c_5.tar.bz2              392 KB
-setuptools-40.6.2-py36_0.tar.bz2             604 KB
+sqlite-3.26.0-h7b6447c_0.tar.bz2             1.9 MB
 jupyter_core-4.4.0-py36_0.tar.bz2             63 KB
 nb_conda-2.2.1-py36_0.tar.bz2                 33 KB
 ptyprocess-0.6.0-py36_0.tar.bz2               23 KB
 libgcc-ng-8.2.0-hdf63c60_1.tar.bz2           7.6 MB
 markupsafe-1.1.0-py36h7b6447c_0.tar.bz2       26 KB
 libffi-3.2.1-h4deb6c0_3.tar.bz2               43 KB
-python-3.6.7-h0371630_0.tar.bz2             34.3 MB
+bleach-3.1.0-py36_0.tar.bz2                  226 KB
 nbformat-4.4.0-py36_0.tar.bz2                141 KB
 pexpect-4.6.0-py36_0.tar.bz2                  77 KB
 backcall-0.1.0-py36_0.tar.bz2                 19 KB
+python-3.6.8-h0371630_0.tar.bz2             34.4 MB
+entrypoints-0.3-py36_0.tar.bz2                12 KB
 openssl-1.1.1-h7b6447c_0.tar.bz2             5.0 MB
-scipy-1.1.0-py36hfa4b5c9_1.tar.bz2          18.0 MB
-notebook-5.6.0-py36_0.tar.bz2                7.4 MB
 xz-5.2.4-h14c3975_4.tar.bz2                  366 KB
 python-dateutil-2.7.5-py36_0.tar.bz2         275 KB
+nb_conda_kernels-2.2.0-py36_1.tar.bz2         37 KB
 wcwidth-0.1.7-py36_0.tar.bz2                  25 KB
 mistune-0.8.4-py36h7b6447c_0.tar.bz2          54 KB
-mkl_fft-1.0.6-py36h7dd41cf_0.tar.bz2         150 KB
 send2trash-1.5.0-py36_0.tar.bz2               16 KB
-pyzmq-17.1.2-py36h14c3975_0.tar.bz2          454 KB
+zeromq-4.3.1-he6710b0_3.tar.bz2              666 KB
 pandocfilters-1.4.2-py36_1.tar.bz2            13 KB
+pyzmq-17.1.2-py36he6710b0_2.tar.bz2          462 KB
 libsodium-1.0.16-h1bed415_0.tar.bz2          302 KB
-cython-0.29-py36he6710b0_0.tar.bz2           2.3 MB
 webencodings-0.5.1-py36_1.tar.bz2             19 KB
 wheel-0.32.3-py36_0.tar.bz2                   35 KB
 traitlets-4.3.2-py36_0.tar.bz2               133 KB
 gmp-6.1.2-hb3b607b_0.tar.bz2                 744 KB
+numpy-1.15.4-py36h7e9f1db_0.tar.bz2           47 KB
+numpy-base-1.15.4-py36hde5b4d6_0.tar.bz2     4.3 MB
 nbconvert-5.3.1-py36_0.tar.bz2               406 KB
-bleach-3.0.2-py36_0.tar.bz2                  220 KB
 pandoc-2.2.3.2-0.tar.bz2                    20.8 MB
 intel-openmp-2019.1-144.tar.bz2              885 KB
 ipykernel-5.1.0-py36h39e3cac_0.tar.bz2       156 KB
-sqlite-3.25.3-h7b6447c_0.tar.bz2             1.9 MB
-pip-18.1-py36_0.tar.bz2                      1.8 MB
-jedi-0.13.1-py36_0.tar.bz2                   229 KB
-libedit-3.1.20170329-h6b74fdf_2.tar.bz2      172 KB
+cython-0.29.4-py36he6710b0_0.tar.bz2         2.2 MB
+parso-0.3.2-py36_0.tar.bz2                   119 KB
+scikit-learn-0.20.2-py36hd81dba3_0.tar.bz2     5.7 MB
 libgfortran-ng-7.3.0-hdf63c60_0.tar.bz2      1.3 MB
+jupyter_client-5.2.4-py36_0.tar.bz2          128 KB
 tk-8.6.8-hbc83047_0.tar.bz2                  3.1 MB
-numpy-base-1.15.4-py36h81de0dd_0.tar.bz2     4.2 MB
+libedit-3.1.20181209-hc058e9b_0.tar.bz2      188 KB
 libstdcxx-ng-8.2.0-hdf63c60_1.tar.bz2        2.9 MB
+jedi-0.13.2-py36_0.tar.bz2                   228 KB
 ipython_genutils-0.2.0-py36_0.tar.bz2         39 KB
-prometheus_client-0.4.2-py36_0.tar.bz2        64 KB
 ncurses-6.1-he6710b0_1.tar.bz2               958 KB
+certifi-2018.11.29-py36_0.tar.bz2            146 KB
 zlib-1.2.11-h7b6447c_3.tar.bz2               120 KB
+prompt_toolkit-2.0.8-py_0.tar.bz2            222 KB
+scipy-1.2.0-py36h7c811a0_0.tar.bz2          17.8 MB
 jsonschema-2.6.0-py36_0.tar.bz2               62 KB
-certifi-2018.10.15-py36_0.tar.bz2            139 KB
-pygments-2.2.0-py36_0.tar.bz2                1.3 MB
+setuptools-40.7.3-py36_0.tar.bz2             606 KB
+prometheus_client-0.5.0-py36_0.tar.bz2        67 KB
 blas-1.0-mkl.tar.bz2                           6 KB
-parso-0.3.1-py36_0.tar.bz2                   114 KB
+pip-19.0.1-py36_0.tar.bz2                    1.8 MB
 jinja2-2.10-py36_0.tar.bz2                   184 KB
-ca-certificates-2018.03.07-0.tar.bz2         124 KB
-entrypoints-0.2.3-py36_2.tar.bz2               9 KB
 mkl-2019.1-144.tar.bz2                     204.6 MB
+ca-certificates-2019.1.23-0.tar.bz2          126 KB
 terminado-0.8.1-py36_1.tar.bz2                21 KB
 testpath-0.4.2-py36_0.tar.bz2                 91 KB
-scikit-learn-0.20.1-py36h4989274_0.tar.bz2     5.7 MB
-prompt_toolkit-2.0.7-py36_0.tar.bz2          482 KB
+mkl_fft-1.0.10-py36ha843d7b_0.tar.bz2        170 KB
+mkl_random-1.0.2-py36hd81dba3_0.tar.bz2      407 KB
 
 ---------------------------------------------------
-Total:                                     333.2 MB
+Total:                                     333.1 MB
 
-Removed zeromq-4.2.5-hf484d3e_1.tar.bz2
+Removed notebook-5.7.4-py36_0.tar.bz2
+Removed decorator-4.3.2-py36_0.tar.bz2
 Removed pickleshare-0.7.5-py36_0.tar.bz2
-Removed mkl_random-1.0.1-py36h4414c95_1.tar.bz2
-Removed numpy-1.15.4-py36h1d66e8a_0.tar.bz2
-Removed six-1.11.0-py36_1.tar.bz2
 Removed ipython-7.2.0-py36h39e3cac_0.tar.bz2
-Removed jupyter_client-5.2.3-py36_0.tar.bz2
-Removed decorator-4.3.0-py36_0.tar.bz2
+Removed pygments-2.3.1-py36_0.tar.bz2
+Removed six-1.12.0-py36_0.tar.bz2
 Removed tornado-5.1.1-py36h7b6447c_0.tar.bz2
-Removed nb_conda_kernels-2.2.0-py36_0.tar.bz2
 Removed readline-7.0-h7b6447c_5.tar.bz2
-Removed setuptools-40.6.2-py36_0.tar.bz2
+Removed sqlite-3.26.0-h7b6447c_0.tar.bz2
 Removed jupyter_core-4.4.0-py36_0.tar.bz2
 Removed nb_conda-2.2.1-py36_0.tar.bz2
 Removed ptyprocess-0.6.0-py36_0.tar.bz2
 Removed libgcc-ng-8.2.0-hdf63c60_1.tar.bz2
 Removed markupsafe-1.1.0-py36h7b6447c_0.tar.bz2
 Removed libffi-3.2.1-h4deb6c0_3.tar.bz2
-Removed python-3.6.7-h0371630_0.tar.bz2
+Removed bleach-3.1.0-py36_0.tar.bz2
 Removed nbformat-4.4.0-py36_0.tar.bz2
 Removed pexpect-4.6.0-py36_0.tar.bz2
 Removed backcall-0.1.0-py36_0.tar.bz2
+Removed python-3.6.8-h0371630_0.tar.bz2
+Removed entrypoints-0.3-py36_0.tar.bz2
 Removed openssl-1.1.1-h7b6447c_0.tar.bz2
-Removed scipy-1.1.0-py36hfa4b5c9_1.tar.bz2
-Removed notebook-5.6.0-py36_0.tar.bz2
 Removed xz-5.2.4-h14c3975_4.tar.bz2
 Removed python-dateutil-2.7.5-py36_0.tar.bz2
+Removed nb_conda_kernels-2.2.0-py36_1.tar.bz2
 Removed wcwidth-0.1.7-py36_0.tar.bz2
 Removed mistune-0.8.4-py36h7b6447c_0.tar.bz2
-Removed mkl_fft-1.0.6-py36h7dd41cf_0.tar.bz2
 Removed send2trash-1.5.0-py36_0.tar.bz2
-Removed pyzmq-17.1.2-py36h14c3975_0.tar.bz2
+Removed zeromq-4.3.1-he6710b0_3.tar.bz2
 Removed pandocfilters-1.4.2-py36_1.tar.bz2
+Removed pyzmq-17.1.2-py36he6710b0_2.tar.bz2
 Removed libsodium-1.0.16-h1bed415_0.tar.bz2
-Removed cython-0.29-py36he6710b0_0.tar.bz2
 Removed webencodings-0.5.1-py36_1.tar.bz2
 Removed wheel-0.32.3-py36_0.tar.bz2
 Removed traitlets-4.3.2-py36_0.tar.bz2
 Removed gmp-6.1.2-hb3b607b_0.tar.bz2
+Removed numpy-1.15.4-py36h7e9f1db_0.tar.bz2
+Removed numpy-base-1.15.4-py36hde5b4d6_0.tar.bz2
 Removed nbconvert-5.3.1-py36_0.tar.bz2
-Removed bleach-3.0.2-py36_0.tar.bz2
 Removed pandoc-2.2.3.2-0.tar.bz2
 Removed intel-openmp-2019.1-144.tar.bz2
 Removed ipykernel-5.1.0-py36h39e3cac_0.tar.bz2
-Removed sqlite-3.25.3-h7b6447c_0.tar.bz2
-Removed pip-18.1-py36_0.tar.bz2
-Removed jedi-0.13.1-py36_0.tar.bz2
-Removed libedit-3.1.20170329-h6b74fdf_2.tar.bz2
+Removed cython-0.29.4-py36he6710b0_0.tar.bz2
+Removed parso-0.3.2-py36_0.tar.bz2
+Removed scikit-learn-0.20.2-py36hd81dba3_0.tar.bz2
 Removed libgfortran-ng-7.3.0-hdf63c60_0.tar.bz2
+Removed jupyter_client-5.2.4-py36_0.tar.bz2
 Removed tk-8.6.8-hbc83047_0.tar.bz2
-Removed numpy-base-1.15.4-py36h81de0dd_0.tar.bz2
+Removed libedit-3.1.20181209-hc058e9b_0.tar.bz2
 Removed libstdcxx-ng-8.2.0-hdf63c60_1.tar.bz2
+Removed jedi-0.13.2-py36_0.tar.bz2
 Removed ipython_genutils-0.2.0-py36_0.tar.bz2
-Removed prometheus_client-0.4.2-py36_0.tar.bz2
 Removed ncurses-6.1-he6710b0_1.tar.bz2
+Removed certifi-2018.11.29-py36_0.tar.bz2
 Removed zlib-1.2.11-h7b6447c_3.tar.bz2
+Removed prompt_toolkit-2.0.8-py_0.tar.bz2
+Removed scipy-1.2.0-py36h7c811a0_0.tar.bz2
 Removed jsonschema-2.6.0-py36_0.tar.bz2
-Removed certifi-2018.10.15-py36_0.tar.bz2
-Removed pygments-2.2.0-py36_0.tar.bz2
+Removed setuptools-40.7.3-py36_0.tar.bz2
+Removed prometheus_client-0.5.0-py36_0.tar.bz2
 Removed blas-1.0-mkl.tar.bz2
-Removed parso-0.3.1-py36_0.tar.bz2
+Removed pip-19.0.1-py36_0.tar.bz2
 Removed jinja2-2.10-py36_0.tar.bz2
-Removed ca-certificates-2018.03.07-0.tar.bz2
-Removed entrypoints-0.2.3-py36_2.tar.bz2
 Removed mkl-2019.1-144.tar.bz2
+Removed ca-certificates-2019.1.23-0.tar.bz2
 Removed terminado-0.8.1-py36_1.tar.bz2
 Removed testpath-0.4.2-py36_0.tar.bz2
-Removed scikit-learn-0.20.1-py36h4989274_0.tar.bz2
-Removed prompt_toolkit-2.0.7-py36_0.tar.bz2
+Removed mkl_fft-1.0.10-py36ha843d7b_0.tar.bz2
+Removed mkl_random-1.0.2-py36hd81dba3_0.tar.bz2
 Cache location: /opt/conda/pkgs
 Will remove the following packages:
 /opt/conda/pkgs
 ---------------
 
-numpy-1.15.4-py36h1d66e8a_0                  207 KB
+numpy-base-1.15.4-py36hde5b4d6_0            18.0 MB
+scikit-learn-0.20.2-py36hd81dba3_0          21.6 MB
+wheel-0.32.3-py36_0                          109 KB
+numpy-1.15.4-py36h7e9f1db_0                  249 KB
+scipy-1.2.0-py36h7c811a0_0                  59.8 MB
 blas-1.0-mkl                                  15 KB
 
 ---------------------------------------------------
-Total:                                       222 KB
+Total:                                      99.7 MB
 
-removing numpy-1.15.4-py36h1d66e8a_0
+removing numpy-base-1.15.4-py36hde5b4d6_0
+removing scikit-learn-0.20.2-py36hd81dba3_0
+removing wheel-0.32.3-py36_0
+removing numpy-1.15.4-py36h7e9f1db_0
+removing scipy-1.2.0-py36h7c811a0_0
 removing blas-1.0-mkl
 source cache (/opt/conda/conda-bld/src_cache)
 Size:                                           0 B
@@ -12499,328 +12878,30 @@ Removing /opt/conda/conda-bld/src_cache
 Removing /opt/conda/conda-bld/git_cache
 Removing /opt/conda/conda-bld/hg_cache
 Removing /opt/conda/conda-bld/svn_cache
-Removing intermediate container 3cd344adc435
- ---&gt; e7426a5cd4b4
-Step 7/10 : ENV PATH /opt/conda/envs/$CONDA_ENV_NAME/bin:$PATH
- ---&gt; Running in 00982a2f9338
-Removing intermediate container 00982a2f9338
- ---&gt; 4010274898c8
-Step 8/10 : RUN [ &#34;/bin/bash&#34;,&#34;-c&#34;,&#34;source activate aml-sdk-conda-env &amp;&amp; pip install azureml-sdk[notebooks,automl] azureml-dataprep&#34;]
- ---&gt; Running in a35ddee965d1
-Collecting azureml-sdk[automl,notebooks]
-  Downloading https://files.pythonhosted.org/packages/04/9d/092f71894e11ce40bac33d72fee342284f754fa07c4e3a33a230b69445fb/azureml_sdk-1.0.8-py3-none-any.whl
-Collecting azureml-dataprep
-  Downloading https://files.pythonhosted.org/packages/c1/61/72c884ebbe5dba9bdec77bed2fa9cab2809b0fcab6f437f51592b03aab3b/azureml_dataprep-1.0.7-py3-none-any.whl (24.7MB)
-Collecting azureml-core==1.0.8.* (from azureml-sdk[automl,notebooks])
-  Downloading https://files.pythonhosted.org/packages/31/6c/d1a7dcc76d07ab5aec38966a9d3dfb420331e1689e0571aacb2dba83e10b/azureml_core-1.0.8-py2.py3-none-any.whl (666kB)
-Collecting azureml-train==1.0.8.* (from azureml-sdk[automl,notebooks])
-  Downloading https://files.pythonhosted.org/packages/b3/ae/c6f4a086f2bd7c0fdbbda9c3b21b08bf1ed516dd01400d5d08dbc2b6508d/azureml_train-1.0.8-py3-none-any.whl
-Collecting azureml-pipeline==1.0.8.* (from azureml-sdk[automl,notebooks])
-  Downloading https://files.pythonhosted.org/packages/37/a7/2a7539e33df3eb84f061cf43a3b306a0c57f0f965f5bb5d22f22f762e383/azureml_pipeline-1.0.8-py3-none-any.whl
-Collecting azureml-train-automl==1.0.8.*; extra == &#34;automl&#34; (from azureml-sdk[automl,notebooks])
-  Downloading https://files.pythonhosted.org/packages/00/a9/df3b74592d5ca47cd61754518248ef2f76401a70bac35c041889bb4b78d0/azureml_train_automl-1.0.8-py3-none-any.whl (217kB)
-Collecting azureml-widgets==1.0.8.*; extra == &#34;notebooks&#34; (from azureml-sdk[automl,notebooks])
-  Downloading https://files.pythonhosted.org/packages/8c/36/055f787b606b23840542fef324cb79f57d6fc48368eb7c4e695b0220f664/azureml_widgets-1.0.8-py3-none-any.whl (4.6MB)
-Requirement already satisfied: numpy&gt;=1.11.3 in /opt/conda/envs/aml-sdk-conda-env/lib/python3.6/site-packages (from azureml-dataprep) (1.15.4)
-Collecting pandas&gt;=0.19.2 (from azureml-dataprep)
-  Downloading https://files.pythonhosted.org/packages/e1/d8/feeb346d41f181e83fba45224ab14a8d8af019b48af742e047f3845d8cff/pandas-0.23.4-cp36-cp36m-manylinux1_x86_64.whl (8.9MB)
-Collecting azureml-dataprep-native&lt;12.0.0,&gt;=11.2.1 (from azureml-dataprep)
-  Downloading https://files.pythonhosted.org/packages/ea/ce/e849907d0cce5022014143f12add212afdc19a11f416d3440b3f3237b682/azureml_dataprep_native-11.2.1-cp36-cp36m-manylinux1_x86_64.whl (1.3MB)
-Collecting dotnetcore2==2.1.7 (from azureml-dataprep)
-  Downloading https://files.pythonhosted.org/packages/5e/ad/563e291f291ddae9967fc6347b5240e5ee5fdb173c33e0780c30ca8cd4c2/dotnetcore2-2.1.7-py3-none-manylinux1_x86_64.whl (28.7MB)
-Requirement already satisfied: six&gt;=1.11.0 in /opt/conda/envs/aml-sdk-conda-env/lib/python3.6/site-packages (from azureml-core==1.0.8.*-&gt;azureml-sdk[automl,notebooks]) (1.11.0)
-Collecting azure-cli-core&gt;=2.0.38 (from azureml-core==1.0.8.*-&gt;azureml-sdk[automl,notebooks])
-  Downloading https://files.pythonhosted.org/packages/13/d9/db78eb6ca9272ab486bdf1327fdca87a8b8915654efee0ab56f3837238b1/azure_cli_core-2.0.55-py2.py3-none-any.whl (107kB)
-Collecting PyJWT (from azureml-core==1.0.8.*-&gt;azureml-sdk[automl,notebooks])
-  Downloading https://files.pythonhosted.org/packages/87/8b/6a9f14b5f781697e51259d81657e6048fd31a113229cf346880bb7545565/PyJWT-1.7.1-py2.py3-none-any.whl
-Collecting urllib3&lt;1.24,&gt;=1.23 (from azureml-core==1.0.8.*-&gt;azureml-sdk[automl,notebooks])
-  Downloading https://files.pythonhosted.org/packages/bd/c9/6fdd990019071a4a32a5e7cb78a1d92c53851ef4f56f62a3486e6a7d8ffb/urllib3-1.23-py2.py3-none-any.whl (133kB)
-Collecting azure-mgmt-resource&gt;=1.2.1 (from azureml-core==1.0.8.*-&gt;azureml-sdk[automl,notebooks])
-  Downloading https://files.pythonhosted.org/packages/2b/2e/e79a278bedfc21308ab0c632759cfda5d7ff02d62260bcc4632449937dcf/azure_mgmt_resource-2.1.0-py2.py3-none-any.whl (757kB)
-Collecting azure-storage-nspkg&gt;=3.0.0 (from azureml-core==1.0.8.*-&gt;azureml-sdk[automl,notebooks])
-  Downloading https://files.pythonhosted.org/packages/ba/f6/054ace7b01c6c21b3b95a83c3997f7d6539d939a2c08c4f27f779128a030/azure_storage_nspkg-3.1.0-py2.py3-none-any.whl
-Collecting azure-cli-profile&gt;=2.0.26 (from azureml-core==1.0.8.*-&gt;azureml-sdk[automl,notebooks])
-  Downloading https://files.pythonhosted.org/packages/c2/d3/fdc722a1b61857250a76027d6d73a50182c6d85132ddd65600a8993574ce/azure_cli_profile-2.1.2-py2.py3-none-any.whl
-Collecting pathspec (from azureml-core==1.0.8.*-&gt;azureml-sdk[automl,notebooks])
-  Downloading https://files.pythonhosted.org/packages/84/2a/bfee636b1e2f7d6e30dd74f49201ccfa5c3cf322d44929ecc6c137c486c5/pathspec-0.5.9.tar.gz
-Collecting contextlib2 (from azureml-core==1.0.8.*-&gt;azureml-sdk[automl,notebooks])
-  Downloading https://files.pythonhosted.org/packages/a2/71/8273a7eeed0aff6a854237ab5453bc9aa67deb49df4832801c21f0ff3782/contextlib2-0.5.5-py2.py3-none-any.whl
-Collecting pytz (from azureml-core==1.0.8.*-&gt;azureml-sdk[automl,notebooks])
-  Downloading https://files.pythonhosted.org/packages/61/28/1d3920e4d1d50b19bc5d24398a7cd85cc7b9a75a490570d5a30c57622d34/pytz-2018.9-py2.py3-none-any.whl (510kB)
-Collecting msrest&gt;=0.5.1 (from azureml-core==1.0.8.*-&gt;azureml-sdk[automl,notebooks])
-  Downloading https://files.pythonhosted.org/packages/eb/96/1cf56e4cfd221b7f6eb6ab096dc23b0d21361393f0784276531e49b0b2a1/msrest-0.6.4-py2.py3-none-any.whl (81kB)
-Requirement already satisfied: python-dateutil&gt;=2.7.3 in /opt/conda/envs/aml-sdk-conda-env/lib/python3.6/site-packages (from azureml-core==1.0.8.*-&gt;azureml-sdk[automl,notebooks]) (2.7.5)
-Collecting SecretStorage&lt;3.0.0 (from azureml-core==1.0.8.*-&gt;azureml-sdk[automl,notebooks])
-  Downloading https://files.pythonhosted.org/packages/a5/a5/0830cfe34a4cfd0d1c3c8b614ede1edb2aaf999091ac8548dd19cb352e79/SecretStorage-2.3.1.tar.gz
-Collecting msrestazure&gt;=0.4.33 (from azureml-core==1.0.8.*-&gt;azureml-sdk[automl,notebooks])
-  Downloading https://files.pythonhosted.org/packages/46/ba/7870308e3d3b4b3956880eed2df20669a5690436793e6fc1442c8b73e01c/msrestazure-0.6.0-py2.py3-none-any.whl
-Collecting requests&gt;=2.19.1 (from azureml-core==1.0.8.*-&gt;azureml-sdk[automl,notebooks])
-  Downloading https://files.pythonhosted.org/packages/7d/e3/20f3d364d6c8e5d2353c72a67778eb189176f08e873c9900e10c0287b84b/requests-2.21.0-py2.py3-none-any.whl (57kB)
-Collecting azure-mgmt-authorization&gt;=0.40.0 (from azureml-core==1.0.8.*-&gt;azureml-sdk[automl,notebooks])
-  Downloading https://files.pythonhosted.org/packages/a1/71/9a20913e92771b3c23564f1bea54d376d09fb30a75585087c70b769d75c8/azure_mgmt_authorization-0.51.1-py2.py3-none-any.whl (111kB)
-Collecting azure-mgmt-keyvault&gt;=0.40.0 (from azureml-core==1.0.8.*-&gt;azureml-sdk[automl,notebooks])
-  Downloading https://files.pythonhosted.org/packages/49/de/0d69aedae7c5f6428314640b65947203ab80409c12b5d4e66fb5b7a4182e/azure_mgmt_keyvault-1.1.0-py2.py3-none-any.whl (111kB)
-Collecting azure-storage-blob&gt;=1.1.0 (from azureml-core==1.0.8.*-&gt;azureml-sdk[automl,notebooks])
-  Downloading https://files.pythonhosted.org/packages/f7/b7/9b20c39bf411e896d110d01f2551e6e7b397fde6eb06b07293fe29705d13/azure_storage_blob-1.4.0-py2.py3-none-any.whl (75kB)
-Collecting docker (from azureml-core==1.0.8.*-&gt;azureml-sdk[automl,notebooks])
-  Downloading https://files.pythonhosted.org/packages/7e/3c/b610f22b170b0f8fe4d8f78974878e116562389f666f99e6549567eb9d87/docker-3.7.0-py2.py3-none-any.whl (133kB)
-Collecting azure-storage-common&gt;=1.1.0 (from azureml-core==1.0.8.*-&gt;azureml-sdk[automl,notebooks])
-  Downloading https://files.pythonhosted.org/packages/73/84/025ac436a6a1d5516d1a67887d7122b3b2ea04ba6b2d2c46fe949accb62b/azure_storage_common-1.4.0-py2.py3-none-any.whl (46kB)
-Collecting ndg-httpsclient (from azureml-core==1.0.8.*-&gt;azureml-sdk[automl,notebooks])
-  Downloading https://files.pythonhosted.org/packages/fb/67/c2f508c00ed2a6911541494504b7cac16fe0b0473912568df65fd1801132/ndg_httpsclient-0.5.1-py3-none-any.whl
-Collecting ruamel.yaml&lt;=0.15.51,&gt;=0.15.35 (from azureml-core==1.0.8.*-&gt;azureml-sdk[automl,notebooks])
-  Downloading https://files.pythonhosted.org/packages/d2/7f/9bb3ba89ceab600c4a0ea75d638ea945215ca3458ac6528e0e39fa3254e4/ruamel.yaml-0.15.51-cp36-cp36m-manylinux1_x86_64.whl (640kB)
-Collecting azure-mgmt-containerregistry&gt;=2.0.0 (from azureml-core==1.0.8.*-&gt;azureml-sdk[automl,notebooks])
-  Downloading https://files.pythonhosted.org/packages/4e/93/982bdd8f38379405beab963ee2abf1ab42a826a57cc2157228216cfc62e4/azure_mgmt_containerregistry-2.6.0-py2.py3-none-any.whl (501kB)
-Collecting cryptography!=1.9,!=2.0.*,!=2.1.*,!=2.2.* (from azureml-core==1.0.8.*-&gt;azureml-sdk[automl,notebooks])
-  Downloading https://files.pythonhosted.org/packages/98/71/e632e222f34632e0527dd41799f7847305e701f38f512d81bdf96009bca4/cryptography-2.5-cp34-abi3-manylinux1_x86_64.whl (2.4MB)
-Collecting azure-common&gt;=1.1.12 (from azureml-core==1.0.8.*-&gt;azureml-sdk[automl,notebooks])
-  Downloading https://files.pythonhosted.org/packages/a5/b2/12c7c906a560e1f0171664c28cadfd989ecf874562cc9c21beea851bf7d1/azure_common-1.1.17-py2.py3-none-any.whl
-Collecting backports.tempfile (from azureml-core==1.0.8.*-&gt;azureml-sdk[automl,notebooks])
-  Downloading https://files.pythonhosted.org/packages/b4/5c/077f910632476281428fe254807952eb47ca78e720d059a46178c541e669/backports.tempfile-1.0-py2.py3-none-any.whl
-Collecting azure-mgmt-storage&gt;=1.5.0 (from azureml-core==1.0.8.*-&gt;azureml-sdk[automl,notebooks])
-  Downloading https://files.pythonhosted.org/packages/d9/87/ab44b9d9627ff91825ba5f5a39092ebfe97a90679008609db4c479036591/azure_mgmt_storage-3.1.1-py2.py3-none-any.whl (696kB)
-Collecting azure-graphrbac&gt;=0.40.0 (from azureml-core==1.0.8.*-&gt;azureml-sdk[automl,notebooks])
-  Downloading https://files.pythonhosted.org/packages/da/a8/3d3d6fe8458b2b07bad10195c79928ea9ba87b5cc0c08903b387dd27c6f0/azure_graphrbac-0.53.0-py2.py3-none-any.whl (108kB)
-Collecting jsonpickle (from azureml-core==1.0.8.*-&gt;azureml-sdk[automl,notebooks])
-  Downloading https://files.pythonhosted.org/packages/dc/12/8c44eabb501e2bc0aec0dd152b328074d98a50968d3a02be28f6037f0c6a/jsonpickle-1.1-py2.py3-none-any.whl
-Collecting azureml-train-core==1.0.8.* (from azureml-train==1.0.8.*-&gt;azureml-sdk[automl,notebooks])
-  Downloading https://files.pythonhosted.org/packages/e7/d8/516e09fbbc7dbaf6ab78b9fc7e33e41f9f993bf67e02a852ec86789ccb5c/azureml_train_core-1.0.8-py3-none-any.whl
-Collecting azureml-pipeline-core==1.0.8.* (from azureml-pipeline==1.0.8.*-&gt;azureml-sdk[automl,notebooks])
-  Downloading https://files.pythonhosted.org/packages/8b/b3/df4ac408b53a37dd8e49576c95d521aec2c58d0f65745668a6e4504b66e1/azureml_pipeline_core-1.0.8-py3-none-any.whl (128kB)
-Collecting azureml-pipeline-steps==1.0.8.* (from azureml-pipeline==1.0.8.*-&gt;azureml-sdk[automl,notebooks])
-  Downloading https://files.pythonhosted.org/packages/a4/e4/dae1424cac4d60251746fea691ba8e4dc0a982f84896c3b98733dfbad5d7/azureml_pipeline_steps-1.0.8-py3-none-any.whl
-Collecting azureml-telemetry==1.0.8.* (from azureml-train-automl==1.0.8.*; extra == &#34;automl&#34;-&gt;azureml-sdk[automl,notebooks])
-  Downloading https://files.pythonhosted.org/packages/d6/14/fe65407a65814da3f4cbfa3b6e1555df45b487742e18041575c21da90eba/azureml_telemetry-1.0.8-py3-none-any.whl
-Collecting tensorflow&gt;=1.10.0 (from azureml-train-automl==1.0.8.*; extra == &#34;automl&#34;-&gt;azureml-sdk[automl,notebooks])
-  Downloading https://files.pythonhosted.org/packages/22/cc/ca70b78087015d21c5f3f93694107f34ebccb3be9624385a911d4b52ecef/tensorflow-1.12.0-cp36-cp36m-manylinux1_x86_64.whl (83.1MB)
-Collecting scikit-learn==0.19.1 (from azureml-train-automl==1.0.8.*; extra == &#34;automl&#34;-&gt;azureml-sdk[automl,notebooks])
-  Downloading https://files.pythonhosted.org/packages/3d/2d/9fbc7baa5f44bc9e88ffb7ed32721b879bfa416573e85031e16f52569bc9/scikit_learn-0.19.1-cp36-cp36m-manylinux1_x86_64.whl (12.4MB)
-Collecting wheel==0.30.0 (from azureml-train-automl==1.0.8.*; extra == &#34;automl&#34;-&gt;azureml-sdk[automl,notebooks])
-  Downloading https://files.pythonhosted.org/packages/0c/80/16a85b47702a1f47a63c104c91abdd0a6704ee8ae3b4ce4afc49bc39f9d9/wheel-0.30.0-py2.py3-none-any.whl (49kB)
-Collecting lightgbm&lt;=2.2.1,&gt;=2.0.11 (from azureml-train-automl==1.0.8.*; extra == &#34;automl&#34;-&gt;azureml-sdk[automl,notebooks])
-  Downloading https://files.pythonhosted.org/packages/78/7e/bc87e7951cfaa998cffaf39e6c721f5bd04efb2e139486206356edb289a5/lightgbm-2.2.1-py2.py3-none-manylinux1_x86_64.whl (1.1MB)
-Collecting resource&gt;=0.1.8 (from azureml-train-automl==1.0.8.*; extra == &#34;automl&#34;-&gt;azureml-sdk[automl,notebooks])
-  Downloading https://files.pythonhosted.org/packages/34/ad/9cd037c01c075f9a273c23557f8e71195d773d59d3881bbb26011d396c8b/Resource-0.2.1-py2.py3-none-any.whl
-Collecting dill&gt;=0.2.8 (from azureml-train-automl==1.0.8.*; extra == &#34;automl&#34;-&gt;azureml-sdk[automl,notebooks])
-  Downloading https://files.pythonhosted.org/packages/fe/42/bfe2e0857bc284cbe6a011d93f2a9ad58a22cb894461b199ae72cfef0f29/dill-0.2.9.tar.gz (150kB)
-Requirement already satisfied: scipy&lt;=1.1.0,&gt;=1.0.0 in /opt/conda/envs/aml-sdk-conda-env/lib/python3.6/site-packages (from azureml-train-automl==1.0.8.*; extra == &#34;automl&#34;-&gt;azureml-sdk[automl,notebooks]) (1.1.0)
-Collecting sklearn-pandas&lt;=1.7.0,&gt;=1.4.0 (from azureml-train-automl==1.0.8.*; extra == &#34;automl&#34;-&gt;azureml-sdk[automl,notebooks])
-  Downloading https://files.pythonhosted.org/packages/7e/9c/c94f46b40b86d2c77c46c4c1b858fc66c117b4390665eca28f2e0812db45/sklearn_pandas-1.7.0-py2.py3-none-any.whl
-Collecting ipywidgets&gt;=7.0.0 (from azureml-widgets==1.0.8.*; extra == &#34;notebooks&#34;-&gt;azureml-sdk[automl,notebooks])
-  Downloading https://files.pythonhosted.org/packages/30/9a/a008c7b1183fac9e52066d80a379b3c64eab535bd9d86cdc29a0b766fd82/ipywidgets-7.4.2-py2.py3-none-any.whl (111kB)
-Collecting distro&gt;=1.2.0 (from dotnetcore2==2.1.7-&gt;azureml-dataprep)
-  Downloading https://files.pythonhosted.org/packages/f6/b1/ba5a96bccd3496241d8908164b9502a129156443cdd5acbdbf04a90b7a09/distro-1.3.0-py2.py3-none-any.whl
-Requirement already satisfied: pip in /opt/conda/envs/aml-sdk-conda-env/lib/python3.6/site-packages (from azure-cli-core&gt;=2.0.38-&gt;azureml-core==1.0.8.*-&gt;azureml-sdk[automl,notebooks]) (18.1)
-Collecting pyyaml&gt;=4.2b1 (from azure-cli-core&gt;=2.0.38-&gt;azureml-core==1.0.8.*-&gt;azureml-sdk[automl,notebooks])
-  Downloading https://files.pythonhosted.org/packages/a8/c6/a8d1555e795dbd0375c3c93b576ca13bbf139db51ea604afa19a2c35fc03/PyYAML-4.2b4.tar.gz (262kB)
-Collecting azure-cli-nspkg&gt;=2.0.0 (from azure-cli-core&gt;=2.0.38-&gt;azureml-core==1.0.8.*-&gt;azureml-sdk[automl,notebooks])
-  Downloading https://files.pythonhosted.org/packages/a7/85/601ef6484bf7a722daa76a4383c4ccfd4980b74ed6c2895392f53ed210d5/azure_cli_nspkg-3.0.3-py2.py3-none-any.whl
-Collecting humanfriendly&gt;=4.7 (from azure-cli-core&gt;=2.0.38-&gt;azureml-core==1.0.8.*-&gt;azureml-sdk[automl,notebooks])
-  Downloading https://files.pythonhosted.org/packages/79/1e/13d96248e3fcaa7777b61fa889feab44865c85e524bbd667acfa0d8b66e3/humanfriendly-4.17-py2.py3-none-any.whl (72kB)
-Collecting colorama&gt;=0.3.9 (from azure-cli-core&gt;=2.0.38-&gt;azureml-core==1.0.8.*-&gt;azureml-sdk[automl,notebooks])
-  Downloading https://files.pythonhosted.org/packages/4f/a6/728666f39bfff1719fc94c481890b2106837da9318031f71a8424b662e12/colorama-0.4.1-py2.py3-none-any.whl
-Collecting azure-cli-telemetry (from azure-cli-core&gt;=2.0.38-&gt;azureml-core==1.0.8.*-&gt;azureml-sdk[automl,notebooks])
-  Downloading https://files.pythonhosted.org/packages/71/4c/da5ebe9300ecdc850031372f81229383c46a70e83dee8e77f58aa6fd0546/azure_cli_telemetry-1.0.0-py2.py3-none-any.whl
-Collecting knack==0.5.1 (from azure-cli-core&gt;=2.0.38-&gt;azureml-core==1.0.8.*-&gt;azureml-sdk[automl,notebooks])
-  Downloading https://files.pythonhosted.org/packages/27/46/0a6d7471efcc519e392640f6933c0f644bbf602971e64797108292cb3623/knack-0.5.1-py2.py3-none-any.whl (50kB)
-Collecting adal&gt;=1.2.0 (from azure-cli-core&gt;=2.0.38-&gt;azureml-core==1.0.8.*-&gt;azureml-sdk[automl,notebooks])
-  Downloading https://files.pythonhosted.org/packages/2d/2f/14882b8dae0977e85577abde3065c141fb94dbb242adfb80e21797e4f7c9/adal-1.2.0-py2.py3-none-any.whl (52kB)
-Collecting argcomplete&gt;=1.8.0 (from azure-cli-core&gt;=2.0.38-&gt;azureml-core==1.0.8.*-&gt;azureml-sdk[automl,notebooks])
-  Downloading https://files.pythonhosted.org/packages/31/88/ba8d8684a8a27749250c66ff7c2b408fdbc29b50da61200338ff9b2607bf/argcomplete-1.9.4-py2.py3-none-any.whl
-Collecting tabulate&lt;=0.8.2,&gt;=0.7.7 (from azure-cli-core&gt;=2.0.38-&gt;azureml-core==1.0.8.*-&gt;azureml-sdk[automl,notebooks])
-  Downloading https://files.pythonhosted.org/packages/12/c2/11d6845db5edf1295bc08b2f488cf5937806586afe42936c3f34c097ebdc/tabulate-0.8.2.tar.gz (45kB)
-Collecting pyopenssl&gt;=17.1.0 (from azure-cli-core&gt;=2.0.38-&gt;azureml-core==1.0.8.*-&gt;azureml-sdk[automl,notebooks])
-  Downloading https://files.pythonhosted.org/packages/01/c8/ceb170d81bd3941cbeb9940fc6cc2ef2ca4288d0ca8929ea4db5905d904d/pyOpenSSL-19.0.0-py2.py3-none-any.whl (53kB)
-Collecting paramiko&gt;=2.0.8 (from azure-cli-core&gt;=2.0.38-&gt;azureml-core==1.0.8.*-&gt;azureml-sdk[automl,notebooks])
-  Downloading https://files.pythonhosted.org/packages/cf/ae/94e70d49044ccc234bfdba20114fa947d7ba6eb68a2e452d89b920e62227/paramiko-2.4.2-py2.py3-none-any.whl (193kB)
-Collecting futures (from azure-cli-core&gt;=2.0.38-&gt;azureml-core==1.0.8.*-&gt;azureml-sdk[automl,notebooks])
-  Downloading https://files.pythonhosted.org/packages/cc/26/b61e3a4eb50653e8a7339d84eeaa46d1e93b92951978873c220ae64d0733/futures-3.1.1.tar.gz
-Collecting jmespath (from azure-cli-core&gt;=2.0.38-&gt;azureml-core==1.0.8.*-&gt;azureml-sdk[automl,notebooks])
-  Downloading https://files.pythonhosted.org/packages/b7/31/05c8d001f7f87f0f07289a5fc0fc3832e9a57f2dbd4d3b0fee70e0d51365/jmespath-0.9.3-py2.py3-none-any.whl
-Collecting antlr4-python3-runtime; python_version &gt;= &#34;3.0&#34; (from azure-cli-core&gt;=2.0.38-&gt;azureml-core==1.0.8.*-&gt;azureml-sdk[automl,notebooks])
-  Downloading https://files.pythonhosted.org/packages/29/14/8ac135ec7cc9db3f768e2d032776718c6b23f74e63543f0974b4873500b2/antlr4-python3-runtime-4.7.2.tar.gz (112kB)
-Requirement already satisfied: pygments in /opt/conda/envs/aml-sdk-conda-env/lib/python3.6/site-packages (from azure-cli-core&gt;=2.0.38-&gt;azureml-core==1.0.8.*-&gt;azureml-sdk[automl,notebooks]) (2.2.0)
-Collecting azure-nspkg&gt;=2.0.0 (from azure-storage-nspkg&gt;=3.0.0-&gt;azureml-core==1.0.8.*-&gt;azureml-sdk[automl,notebooks])
-  Downloading https://files.pythonhosted.org/packages/c4/0c/c562be95a9a2ed52454f598571cf300b1114d0db2aa27f5b8ed3bb9cd0c0/azure_nspkg-3.0.2-py3-none-any.whl
-Collecting azure-cli-command-modules-nspkg&gt;=2.0.0 (from azure-cli-profile&gt;=2.0.26-&gt;azureml-core==1.0.8.*-&gt;azureml-sdk[automl,notebooks])
-  Downloading https://files.pythonhosted.org/packages/e6/c9/cdeeeabc550848e2a07caa66cba28aa057d23b6feaa824ceafd32c3f2226/azure_cli_command_modules_nspkg-2.0.2-py2.py3-none-any.whl
-Requirement already satisfied: certifi&gt;=2017.4.17 in /opt/conda/envs/aml-sdk-conda-env/lib/python3.6/site-packages (from msrest&gt;=0.5.1-&gt;azureml-core==1.0.8.*-&gt;azureml-sdk[automl,notebooks]) (2018.10.15)
-Collecting isodate&gt;=0.6.0 (from msrest&gt;=0.5.1-&gt;azureml-core==1.0.8.*-&gt;azureml-sdk[automl,notebooks])
-  Downloading https://files.pythonhosted.org/packages/9b/9f/b36f7774ff5ea8e428fdcfc4bb332c39ee5b9362ddd3d40d9516a55221b2/isodate-0.6.0-py2.py3-none-any.whl (45kB)
-Collecting requests-oauthlib&gt;=0.5.0 (from msrest&gt;=0.5.1-&gt;azureml-core==1.0.8.*-&gt;azureml-sdk[automl,notebooks])
-  Downloading https://files.pythonhosted.org/packages/c2/e2/9fd03d55ffb70fe51f587f20bcf407a6927eb121de86928b34d162f0b1ac/requests_oauthlib-1.2.0-py2.py3-none-any.whl
-Collecting idna&lt;2.9,&gt;=2.5 (from requests&gt;=2.19.1-&gt;azureml-core==1.0.8.*-&gt;azureml-sdk[automl,notebooks])
-  Downloading https://files.pythonhosted.org/packages/14/2c/cd551d81dbe15200be1cf41cd03869a46fe7226e7450af7a6545bfc474c9/idna-2.8-py2.py3-none-any.whl (58kB)
-Collecting chardet&lt;3.1.0,&gt;=3.0.2 (from requests&gt;=2.19.1-&gt;azureml-core==1.0.8.*-&gt;azureml-sdk[automl,notebooks])
-  Downloading https://files.pythonhosted.org/packages/bc/a9/01ffebfb562e4274b6487b4bb1ddec7ca55ec7510b22e4c51f14098443b8/chardet-3.0.4-py2.py3-none-any.whl (133kB)
-Collecting azure-mgmt-nspkg&gt;=2.0.0 (from azure-mgmt-keyvault&gt;=0.40.0-&gt;azureml-core==1.0.8.*-&gt;azureml-sdk[automl,notebooks])
-  Downloading https://files.pythonhosted.org/packages/b3/c2/af4b47845f27dc7d206ed4908b9e580f8bc94a4b2f3956a0d87c40719d90/azure_mgmt_nspkg-3.0.2-py3-none-any.whl
-Collecting docker-pycreds&gt;=0.4.0 (from docker-&gt;azureml-core==1.0.8.*-&gt;azureml-sdk[automl,notebooks])
-  Downloading https://files.pythonhosted.org/packages/f5/e8/f6bd1eee09314e7e6dee49cbe2c5e22314ccdb38db16c9fc72d2fa80d054/docker_pycreds-0.4.0-py2.py3-none-any.whl
-Collecting websocket-client&gt;=0.32.0 (from docker-&gt;azureml-core==1.0.8.*-&gt;azureml-sdk[automl,notebooks])
-  Downloading https://files.pythonhosted.org/packages/26/2d/f749a5c82f6192d77ed061a38e02001afcba55fe8477336d26a950ab17ce/websocket_client-0.54.0-py2.py3-none-any.whl (200kB)
-Collecting pyasn1&gt;=0.1.1 (from ndg-httpsclient-&gt;azureml-core==1.0.8.*-&gt;azureml-sdk[automl,notebooks])
-  Downloading https://files.pythonhosted.org/packages/7b/7c/c9386b82a25115cccf1903441bba3cbadcfae7b678a20167347fa8ded34c/pyasn1-0.4.5-py2.py3-none-any.whl (73kB)
-Collecting cffi!=1.11.3,&gt;=1.8 (from cryptography!=1.9,!=2.0.*,!=2.1.*,!=2.2.*-&gt;azureml-core==1.0.8.*-&gt;azureml-sdk[automl,notebooks])
-  Downloading https://files.pythonhosted.org/packages/6d/c0/47db8f624f3e4e2f3f27be03a93379d1ba16a1450a7b1aacfa0366e2c0dd/cffi-1.11.5-cp36-cp36m-manylinux1_x86_64.whl (421kB)
-Collecting asn1crypto&gt;=0.21.0 (from cryptography!=1.9,!=2.0.*,!=2.1.*,!=2.2.*-&gt;azureml-core==1.0.8.*-&gt;azureml-sdk[automl,notebooks])
-  Downloading https://files.pythonhosted.org/packages/ea/cd/35485615f45f30a510576f1a56d1e0a7ad7bd8ab5ed7cdc600ef7cd06222/asn1crypto-0.24.0-py2.py3-none-any.whl (101kB)
-Collecting backports.weakref (from backports.tempfile-&gt;azureml-core==1.0.8.*-&gt;azureml-sdk[automl,notebooks])
-  Downloading https://files.pythonhosted.org/packages/88/ec/f598b633c3d5ffe267aaada57d961c94fdfa183c5c3ebda2b6d151943db6/backports.weakref-1.0.post1-py2.py3-none-any.whl
-Collecting azureml-train-restclients-hyperdrive==1.0.8.* (from azureml-train-core==1.0.8.*-&gt;azureml-train==1.0.8.*-&gt;azureml-sdk[automl,notebooks])
-  Downloading https://files.pythonhosted.org/packages/39/59/bb104ed2b00810d85afc610f04d6d8d7787e7da794d5af89d0c66f5e115d/azureml_train_restclients_hyperdrive-1.0.8-py3-none-any.whl
-Collecting applicationinsights (from azureml-telemetry==1.0.8.*-&gt;azureml-train-automl==1.0.8.*; extra == &#34;automl&#34;-&gt;azureml-sdk[automl,notebooks])
-  Downloading https://files.pythonhosted.org/packages/e3/c8/7848a0dd85158930b859eb8be1e38fc76a91f0a040d491723ebb356d7358/applicationinsights-0.11.7-py2.py3-none-any.whl (56kB)
-Collecting keras-preprocessing&gt;=1.0.5 (from tensorflow&gt;=1.10.0-&gt;azureml-train-automl==1.0.8.*; extra == &#34;automl&#34;-&gt;azureml-sdk[automl,notebooks])
-  Downloading https://files.pythonhosted.org/packages/fc/94/74e0fa783d3fc07e41715973435dd051ca89c550881b3454233c39c73e69/Keras_Preprocessing-1.0.5-py2.py3-none-any.whl
-Collecting tensorboard&lt;1.13.0,&gt;=1.12.0 (from tensorflow&gt;=1.10.0-&gt;azureml-train-automl==1.0.8.*; extra == &#34;automl&#34;-&gt;azureml-sdk[automl,notebooks])
-  Downloading https://files.pythonhosted.org/packages/07/53/8d32ce9471c18f8d99028b7cef2e5b39ea8765bd7ef250ca05b490880971/tensorboard-1.12.2-py3-none-any.whl (3.0MB)
-Collecting grpcio&gt;=1.8.6 (from tensorflow&gt;=1.10.0-&gt;azureml-train-automl==1.0.8.*; extra == &#34;automl&#34;-&gt;azureml-sdk[automl,notebooks])
-  Downloading https://files.pythonhosted.org/packages/51/a3/489ce6a67047263e9b0da8784b2925c4f89b688a6e33073c5bb6c4c2867f/grpcio-1.18.0-cp36-cp36m-manylinux1_x86_64.whl (10.6MB)
-Collecting keras-applications&gt;=1.0.6 (from tensorflow&gt;=1.10.0-&gt;azureml-train-automl==1.0.8.*; extra == &#34;automl&#34;-&gt;azureml-sdk[automl,notebooks])
-  Downloading https://files.pythonhosted.org/packages/3f/c4/2ff40221029f7098d58f8d7fb99b97e8100f3293f9856f0fb5834bef100b/Keras_Applications-1.0.6-py2.py3-none-any.whl (44kB)
-Collecting absl-py&gt;=0.1.6 (from tensorflow&gt;=1.10.0-&gt;azureml-train-automl==1.0.8.*; extra == &#34;automl&#34;-&gt;azureml-sdk[automl,notebooks])
-  Downloading https://files.pythonhosted.org/packages/31/bc/ab68120d1d89ae23b694a55fe2aece2f91194313b71f9b05a80b32d3c24b/absl-py-0.7.0.tar.gz (96kB)
-Collecting astor&gt;=0.6.0 (from tensorflow&gt;=1.10.0-&gt;azureml-train-automl==1.0.8.*; extra == &#34;automl&#34;-&gt;azureml-sdk[automl,notebooks])
-  Downloading https://files.pythonhosted.org/packages/35/6b/11530768cac581a12952a2aad00e1526b89d242d0b9f59534ef6e6a1752f/astor-0.7.1-py2.py3-none-any.whl
-Collecting termcolor&gt;=1.1.0 (from tensorflow&gt;=1.10.0-&gt;azureml-train-automl==1.0.8.*; extra == &#34;automl&#34;-&gt;azureml-sdk[automl,notebooks])
-  Downloading https://files.pythonhosted.org/packages/8a/48/a76be51647d0eb9f10e2a4511bf3ffb8cc1e6b14e9e4fab46173aa79f981/termcolor-1.1.0.tar.gz
-Collecting protobuf&gt;=3.6.1 (from tensorflow&gt;=1.10.0-&gt;azureml-train-automl==1.0.8.*; extra == &#34;automl&#34;-&gt;azureml-sdk[automl,notebooks])
-  Downloading https://files.pythonhosted.org/packages/c2/f9/28787754923612ca9bfdffc588daa05580ed70698add063a5629d1a4209d/protobuf-3.6.1-cp36-cp36m-manylinux1_x86_64.whl (1.1MB)
-Collecting gast&gt;=0.2.0 (from tensorflow&gt;=1.10.0-&gt;azureml-train-automl==1.0.8.*; extra == &#34;automl&#34;-&gt;azureml-sdk[automl,notebooks])
-  Downloading https://files.pythonhosted.org/packages/4e/35/11749bf99b2d4e3cceb4d55ca22590b0d7c2c62b9de38ac4a4a7f4687421/gast-0.2.2.tar.gz
-Collecting JsonSir&gt;=0.0.2 (from resource&gt;=0.1.8-&gt;azureml-train-automl==1.0.8.*; extra == &#34;automl&#34;-&gt;azureml-sdk[automl,notebooks])
-  Downloading https://files.pythonhosted.org/packages/aa/bf/5c00c1dafaa3ca2c32e7641d9c2c6f9d6d76e127bde00eb600333a60c5bc/JsonSir-0.0.2.tar.gz
-Collecting JsonForm&gt;=0.0.2 (from resource&gt;=0.1.8-&gt;azureml-train-automl==1.0.8.*; extra == &#34;automl&#34;-&gt;azureml-sdk[automl,notebooks])
-  Downloading https://files.pythonhosted.org/packages/4f/b7/b9491ba4b709d0616fab15a89f8efe4d3a7924652e1fdd4f15303e9ecdf0/JsonForm-0.0.2.tar.gz
-Collecting python-easyconfig&gt;=0.1.0 (from resource&gt;=0.1.8-&gt;azureml-train-automl==1.0.8.*; extra == &#34;automl&#34;-&gt;azureml-sdk[automl,notebooks])
-  Downloading https://files.pythonhosted.org/packages/b1/86/1138081cca360a02066eedaf301d0f358c35e0e0d67572acf9d6354edca9/Python_EasyConfig-0.1.7-py2.py3-none-any.whl
-Requirement already satisfied: traitlets&gt;=4.3.1 in /opt/conda/envs/aml-sdk-conda-env/lib/python3.6/site-packages (from ipywidgets&gt;=7.0.0-&gt;azureml-widgets==1.0.8.*; extra == &#34;notebooks&#34;-&gt;azureml-sdk[automl,notebooks]) (4.3.2)
-Requirement already satisfied: nbformat&gt;=4.2.0 in /opt/conda/envs/aml-sdk-conda-env/lib/python3.6/site-packages (from ipywidgets&gt;=7.0.0-&gt;azureml-widgets==1.0.8.*; extra == &#34;notebooks&#34;-&gt;azureml-sdk[automl,notebooks]) (4.4.0)
-Requirement already satisfied: ipykernel&gt;=4.5.1 in /opt/conda/envs/aml-sdk-conda-env/lib/python3.6/site-packages (from ipywidgets&gt;=7.0.0-&gt;azureml-widgets==1.0.8.*; extra == &#34;notebooks&#34;-&gt;azureml-sdk[automl,notebooks]) (5.1.0)
-Requirement already satisfied: ipython&gt;=4.0.0; python_version &gt;= &#34;3.3&#34; in /opt/conda/envs/aml-sdk-conda-env/lib/python3.6/site-packages (from ipywidgets&gt;=7.0.0-&gt;azureml-widgets==1.0.8.*; extra == &#34;notebooks&#34;-&gt;azureml-sdk[automl,notebooks]) (7.2.0)
-Collecting widgetsnbextension~=3.4.0 (from ipywidgets&gt;=7.0.0-&gt;azureml-widgets==1.0.8.*; extra == &#34;notebooks&#34;-&gt;azureml-sdk[automl,notebooks])
-  Downloading https://files.pythonhosted.org/packages/8a/81/35789a3952afb48238289171728072d26d6e76649ddc8b3588657a2d78c1/widgetsnbextension-3.4.2-py2.py3-none-any.whl (2.2MB)
-Collecting portalocker==1.2.1 (from azure-cli-telemetry-&gt;azure-cli-core&gt;=2.0.38-&gt;azureml-core==1.0.8.*-&gt;azureml-sdk[automl,notebooks])
-  Downloading https://files.pythonhosted.org/packages/57/41/05e79e5516db1cc0c967b3202388cde729f871c871b0a07bf24ff11adfcf/portalocker-1.2.1-py2.py3-none-any.whl
-Collecting bcrypt&gt;=3.1.3 (from paramiko&gt;=2.0.8-&gt;azure-cli-core&gt;=2.0.38-&gt;azureml-core==1.0.8.*-&gt;azureml-sdk[automl,notebooks])
-  Downloading https://files.pythonhosted.org/packages/d0/79/79a4d167a31cc206117d9b396926615fa9c1fdbd52017bcced80937ac501/bcrypt-3.1.6-cp34-abi3-manylinux1_x86_64.whl (55kB)
-Collecting pynacl&gt;=1.0.1 (from paramiko&gt;=2.0.8-&gt;azure-cli-core&gt;=2.0.38-&gt;azureml-core==1.0.8.*-&gt;azureml-sdk[automl,notebooks])
-  Downloading https://files.pythonhosted.org/packages/27/15/2cd0a203f318c2240b42cd9dd13c931ddd61067809fee3479f44f086103e/PyNaCl-1.3.0-cp34-abi3-manylinux1_x86_64.whl (759kB)
-Collecting oauthlib&gt;=3.0.0 (from requests-oauthlib&gt;=0.5.0-&gt;msrest&gt;=0.5.1-&gt;azureml-core==1.0.8.*-&gt;azureml-sdk[automl,notebooks])
-  Downloading https://files.pythonhosted.org/packages/b8/03/ec2be6c125f330361afe33bff48ef7549c47da8fefc658a2df2242175b4b/oauthlib-3.0.0-py2.py3-none-any.whl (142kB)
-Collecting pycparser (from cffi!=1.11.3,&gt;=1.8-&gt;cryptography!=1.9,!=2.0.*,!=2.1.*,!=2.2.*-&gt;azureml-core==1.0.8.*-&gt;azureml-sdk[automl,notebooks])
-  Downloading https://files.pythonhosted.org/packages/68/9e/49196946aee219aead1290e00d1e7fdeab8567783e83e1b9ab5585e6206a/pycparser-2.19.tar.gz (158kB)
-Collecting markdown&gt;=2.6.8 (from tensorboard&lt;1.13.0,&gt;=1.12.0-&gt;tensorflow&gt;=1.10.0-&gt;azureml-train-automl==1.0.8.*; extra == &#34;automl&#34;-&gt;azureml-sdk[automl,notebooks])
-  Downloading https://files.pythonhosted.org/packages/7a/6b/5600647404ba15545ec37d2f7f58844d690baf2f81f3a60b862e48f29287/Markdown-3.0.1-py2.py3-none-any.whl (89kB)
-Collecting werkzeug&gt;=0.11.10 (from tensorboard&lt;1.13.0,&gt;=1.12.0-&gt;tensorflow&gt;=1.10.0-&gt;azureml-train-automl==1.0.8.*; extra == &#34;automl&#34;-&gt;azureml-sdk[automl,notebooks])
-  Downloading https://files.pythonhosted.org/packages/20/c4/12e3e56473e52375aa29c4764e70d1b8f3efa6682bef8d0aae04fe335243/Werkzeug-0.14.1-py2.py3-none-any.whl (322kB)
-Collecting h5py (from keras-applications&gt;=1.0.6-&gt;tensorflow&gt;=1.10.0-&gt;azureml-train-automl==1.0.8.*; extra == &#34;automl&#34;-&gt;azureml-sdk[automl,notebooks])
-  Downloading https://files.pythonhosted.org/packages/30/99/d7d4fbf2d02bb30fb76179911a250074b55b852d34e98dd452a9f394ac06/h5py-2.9.0-cp36-cp36m-manylinux1_x86_64.whl (2.8MB)
-Requirement already satisfied: setuptools in /opt/conda/envs/aml-sdk-conda-env/lib/python3.6/site-packages (from protobuf&gt;=3.6.1-&gt;tensorflow&gt;=1.10.0-&gt;azureml-train-automl==1.0.8.*; extra == &#34;automl&#34;-&gt;azureml-sdk[automl,notebooks]) (40.6.2)
-Requirement already satisfied: jsonschema in /opt/conda/envs/aml-sdk-conda-env/lib/python3.6/site-packages (from JsonForm&gt;=0.0.2-&gt;resource&gt;=0.1.8-&gt;azureml-train-automl==1.0.8.*; extra == &#34;automl&#34;-&gt;azureml-sdk[automl,notebooks]) (2.6.0)
-Requirement already satisfied: ipython-genutils in /opt/conda/envs/aml-sdk-conda-env/lib/python3.6/site-packages (from traitlets&gt;=4.3.1-&gt;ipywidgets&gt;=7.0.0-&gt;azureml-widgets==1.0.8.*; extra == &#34;notebooks&#34;-&gt;azureml-sdk[automl,notebooks]) (0.2.0)
-Requirement already satisfied: decorator in /opt/conda/envs/aml-sdk-conda-env/lib/python3.6/site-packages (from traitlets&gt;=4.3.1-&gt;ipywidgets&gt;=7.0.0-&gt;azureml-widgets==1.0.8.*; extra == &#34;notebooks&#34;-&gt;azureml-sdk[automl,notebooks]) (4.3.0)
-Requirement already satisfied: jupyter-core in /opt/conda/envs/aml-sdk-conda-env/lib/python3.6/site-packages (from nbformat&gt;=4.2.0-&gt;ipywidgets&gt;=7.0.0-&gt;azureml-widgets==1.0.8.*; extra == &#34;notebooks&#34;-&gt;azureml-sdk[automl,notebooks]) (4.4.0)
-Requirement already satisfied: tornado&gt;=4.2 in /opt/conda/envs/aml-sdk-conda-env/lib/python3.6/site-packages (from ipykernel&gt;=4.5.1-&gt;ipywidgets&gt;=7.0.0-&gt;azureml-widgets==1.0.8.*; extra == &#34;notebooks&#34;-&gt;azureml-sdk[automl,notebooks]) (5.1.1)
-Requirement already satisfied: jupyter-client in /opt/conda/envs/aml-sdk-conda-env/lib/python3.6/site-packages (from ipykernel&gt;=4.5.1-&gt;ipywidgets&gt;=7.0.0-&gt;azureml-widgets==1.0.8.*; extra == &#34;notebooks&#34;-&gt;azureml-sdk[automl,notebooks]) (5.2.3)
-Requirement already satisfied: pickleshare in /opt/conda/envs/aml-sdk-conda-env/lib/python3.6/site-packages (from ipython&gt;=4.0.0; python_version &gt;= &#34;3.3&#34;-&gt;ipywidgets&gt;=7.0.0-&gt;azureml-widgets==1.0.8.*; extra == &#34;notebooks&#34;-&gt;azureml-sdk[automl,notebooks]) (0.7.5)
-Requirement already satisfied: pexpect; sys_platform != &#34;win32&#34; in /opt/conda/envs/aml-sdk-conda-env/lib/python3.6/site-packages (from ipython&gt;=4.0.0; python_version &gt;= &#34;3.3&#34;-&gt;ipywidgets&gt;=7.0.0-&gt;azureml-widgets==1.0.8.*; extra == &#34;notebooks&#34;-&gt;azureml-sdk[automl,notebooks]) (4.6.0)
-Requirement already satisfied: prompt-toolkit&lt;2.1.0,&gt;=2.0.0 in /opt/conda/envs/aml-sdk-conda-env/lib/python3.6/site-packages (from ipython&gt;=4.0.0; python_version &gt;= &#34;3.3&#34;-&gt;ipywidgets&gt;=7.0.0-&gt;azureml-widgets==1.0.8.*; extra == &#34;notebooks&#34;-&gt;azureml-sdk[automl,notebooks]) (2.0.7)
-Requirement already satisfied: jedi&gt;=0.10 in /opt/conda/envs/aml-sdk-conda-env/lib/python3.6/site-packages (from ipython&gt;=4.0.0; python_version &gt;= &#34;3.3&#34;-&gt;ipywidgets&gt;=7.0.0-&gt;azureml-widgets==1.0.8.*; extra == &#34;notebooks&#34;-&gt;azureml-sdk[automl,notebooks]) (0.13.1)
-Requirement already satisfied: backcall in /opt/conda/envs/aml-sdk-conda-env/lib/python3.6/site-packages (from ipython&gt;=4.0.0; python_version &gt;= &#34;3.3&#34;-&gt;ipywidgets&gt;=7.0.0-&gt;azureml-widgets==1.0.8.*; extra == &#34;notebooks&#34;-&gt;azureml-sdk[automl,notebooks]) (0.1.0)
-Requirement already satisfied: notebook&gt;=4.4.1 in /opt/conda/envs/aml-sdk-conda-env/lib/python3.6/site-packages (from widgetsnbextension~=3.4.0-&gt;ipywidgets&gt;=7.0.0-&gt;azureml-widgets==1.0.8.*; extra == &#34;notebooks&#34;-&gt;azureml-sdk[automl,notebooks]) (5.6.0)
-Requirement already satisfied: pyzmq&gt;=13 in /opt/conda/envs/aml-sdk-conda-env/lib/python3.6/site-packages (from jupyter-client-&gt;ipykernel&gt;=4.5.1-&gt;ipywidgets&gt;=7.0.0-&gt;azureml-widgets==1.0.8.*; extra == &#34;notebooks&#34;-&gt;azureml-sdk[automl,notebooks]) (17.1.2)
-Requirement already satisfied: ptyprocess&gt;=0.5 in /opt/conda/envs/aml-sdk-conda-env/lib/python3.6/site-packages (from pexpect; sys_platform != &#34;win32&#34;-&gt;ipython&gt;=4.0.0; python_version &gt;= &#34;3.3&#34;-&gt;ipywidgets&gt;=7.0.0-&gt;azureml-widgets==1.0.8.*; extra == &#34;notebooks&#34;-&gt;azureml-sdk[automl,notebooks]) (0.6.0)
-Requirement already satisfied: wcwidth in /opt/conda/envs/aml-sdk-conda-env/lib/python3.6/site-packages (from prompt-toolkit&lt;2.1.0,&gt;=2.0.0-&gt;ipython&gt;=4.0.0; python_version &gt;= &#34;3.3&#34;-&gt;ipywidgets&gt;=7.0.0-&gt;azureml-widgets==1.0.8.*; extra == &#34;notebooks&#34;-&gt;azureml-sdk[automl,notebooks]) (0.1.7)
-Requirement already satisfied: parso&gt;=0.3.0 in /opt/conda/envs/aml-sdk-conda-env/lib/python3.6/site-packages (from jedi&gt;=0.10-&gt;ipython&gt;=4.0.0; python_version &gt;= &#34;3.3&#34;-&gt;ipywidgets&gt;=7.0.0-&gt;azureml-widgets==1.0.8.*; extra == &#34;notebooks&#34;-&gt;azureml-sdk[automl,notebooks]) (0.3.1)
-Requirement already satisfied: jinja2 in /opt/conda/envs/aml-sdk-conda-env/lib/python3.6/site-packages (from notebook&gt;=4.4.1-&gt;widgetsnbextension~=3.4.0-&gt;ipywidgets&gt;=7.0.0-&gt;azureml-widgets==1.0.8.*; extra == &#34;notebooks&#34;-&gt;azureml-sdk[automl,notebooks]) (2.10)
-Requirement already satisfied: nbconvert in /opt/conda/envs/aml-sdk-conda-env/lib/python3.6/site-packages (from notebook&gt;=4.4.1-&gt;widgetsnbextension~=3.4.0-&gt;ipywidgets&gt;=7.0.0-&gt;azureml-widgets==1.0.8.*; extra == &#34;notebooks&#34;-&gt;azureml-sdk[automl,notebooks]) (5.3.1)
-Requirement already satisfied: prometheus-client in /opt/conda/envs/aml-sdk-conda-env/lib/python3.6/site-packages (from notebook&gt;=4.4.1-&gt;widgetsnbextension~=3.4.0-&gt;ipywidgets&gt;=7.0.0-&gt;azureml-widgets==1.0.8.*; extra == &#34;notebooks&#34;-&gt;azureml-sdk[automl,notebooks]) (0.4.2)
-Requirement already satisfied: Send2Trash in /opt/conda/envs/aml-sdk-conda-env/lib/python3.6/site-packages (from notebook&gt;=4.4.1-&gt;widgetsnbextension~=3.4.0-&gt;ipywidgets&gt;=7.0.0-&gt;azureml-widgets==1.0.8.*; extra == &#34;notebooks&#34;-&gt;azureml-sdk[automl,notebooks]) (1.5.0)
-Requirement already satisfied: terminado&gt;=0.8.1 in /opt/conda/envs/aml-sdk-conda-env/lib/python3.6/site-packages (from notebook&gt;=4.4.1-&gt;widgetsnbextension~=3.4.0-&gt;ipywidgets&gt;=7.0.0-&gt;azureml-widgets==1.0.8.*; extra == &#34;notebooks&#34;-&gt;azureml-sdk[automl,notebooks]) (0.8.1)
-Requirement already satisfied: MarkupSafe&gt;=0.23 in /opt/conda/envs/aml-sdk-conda-env/lib/python3.6/site-packages (from jinja2-&gt;notebook&gt;=4.4.1-&gt;widgetsnbextension~=3.4.0-&gt;ipywidgets&gt;=7.0.0-&gt;azureml-widgets==1.0.8.*; extra == &#34;notebooks&#34;-&gt;azureml-sdk[automl,notebooks]) (1.1.0)
-Requirement already satisfied: mistune&gt;=0.7.4 in /opt/conda/envs/aml-sdk-conda-env/lib/python3.6/site-packages (from nbconvert-&gt;notebook&gt;=4.4.1-&gt;widgetsnbextension~=3.4.0-&gt;ipywidgets&gt;=7.0.0-&gt;azureml-widgets==1.0.8.*; extra == &#34;notebooks&#34;-&gt;azureml-sdk[automl,notebooks]) (0.8.4)
-Requirement already satisfied: bleach in /opt/conda/envs/aml-sdk-conda-env/lib/python3.6/site-packages (from nbconvert-&gt;notebook&gt;=4.4.1-&gt;widgetsnbextension~=3.4.0-&gt;ipywidgets&gt;=7.0.0-&gt;azureml-widgets==1.0.8.*; extra == &#34;notebooks&#34;-&gt;azureml-sdk[automl,notebooks]) (3.0.2)
-Requirement already satisfied: testpath in /opt/conda/envs/aml-sdk-conda-env/lib/python3.6/site-packages (from nbconvert-&gt;notebook&gt;=4.4.1-&gt;widgetsnbextension~=3.4.0-&gt;ipywidgets&gt;=7.0.0-&gt;azureml-widgets==1.0.8.*; extra == &#34;notebooks&#34;-&gt;azureml-sdk[automl,notebooks]) (0.4.2)
-Requirement already satisfied: pandocfilters&gt;=1.4.1 in /opt/conda/envs/aml-sdk-conda-env/lib/python3.6/site-packages (from nbconvert-&gt;notebook&gt;=4.4.1-&gt;widgetsnbextension~=3.4.0-&gt;ipywidgets&gt;=7.0.0-&gt;azureml-widgets==1.0.8.*; extra == &#34;notebooks&#34;-&gt;azureml-sdk[automl,notebooks]) (1.4.2)
-Requirement already satisfied: entrypoints&gt;=0.2.2 in /opt/conda/envs/aml-sdk-conda-env/lib/python3.6/site-packages (from nbconvert-&gt;notebook&gt;=4.4.1-&gt;widgetsnbextension~=3.4.0-&gt;ipywidgets&gt;=7.0.0-&gt;azureml-widgets==1.0.8.*; extra == &#34;notebooks&#34;-&gt;azureml-sdk[automl,notebooks]) (0.2.3)
-Requirement already satisfied: webencodings in /opt/conda/envs/aml-sdk-conda-env/lib/python3.6/site-packages (from bleach-&gt;nbconvert-&gt;notebook&gt;=4.4.1-&gt;widgetsnbextension~=3.4.0-&gt;ipywidgets&gt;=7.0.0-&gt;azureml-widgets==1.0.8.*; extra == &#34;notebooks&#34;-&gt;azureml-sdk[automl,notebooks]) (0.5.1)
-Building wheels for collected packages: pathspec, SecretStorage, dill, pyyaml, tabulate, futures, antlr4-python3-runtime, absl-py, termcolor, gast, JsonSir, JsonForm, pycparser
-  Running setup.py bdist_wheel for pathspec: started
-  Running setup.py bdist_wheel for pathspec: finished with status &#39;done&#39;
-  Stored in directory: /root/.cache/pip/wheels/45/cb/7e/ce6e6062c69446e39e328170524ca8213498bc66a74c6a210b
-  Running setup.py bdist_wheel for SecretStorage: started
-  Running setup.py bdist_wheel for SecretStorage: finished with status &#39;done&#39;
-  Stored in directory: /root/.cache/pip/wheels/4e/5b/1b/be8c8a830a0243af85b2946a0aece2c6743d7f7f946977ed67
-  Running setup.py bdist_wheel for dill: started
-  Running setup.py bdist_wheel for dill: finished with status &#39;done&#39;
-  Stored in directory: /root/.cache/pip/wheels/5b/d7/0f/e58eae695403de585269f4e4a94e0cd6ca60ec0c202936fa4a
-  Running setup.py bdist_wheel for pyyaml: started
-  Running setup.py bdist_wheel for pyyaml: finished with status &#39;done&#39;
-  Stored in directory: /root/.cache/pip/wheels/d2/ab/e6/df7b6c9e3b43272fe0164d6a012e4e02e63baaddae4ca6a0d0
-  Running setup.py bdist_wheel for tabulate: started
-  Running setup.py bdist_wheel for tabulate: finished with status &#39;done&#39;
-  Stored in directory: /root/.cache/pip/wheels/2a/85/33/2f6da85d5f10614cbe5a625eab3b3aebfdf43e7b857f25f829
-  Running setup.py bdist_wheel for futures: started
-  Running setup.py bdist_wheel for futures: finished with status &#39;done&#39;
-  Stored in directory: /root/.cache/pip/wheels/f3/f9/c7/4fbf1faa6038faf183f6e3ea61f17a5f7eea5ab9a1dd7753fd
-  Running setup.py bdist_wheel for antlr4-python3-runtime: started
-  Running setup.py bdist_wheel for antlr4-python3-runtime: finished with status &#39;done&#39;
-  Stored in directory: /root/.cache/pip/wheels/03/65/47/b6700d23b7529a49513f7601b4f96174a4fa9efdbec03e7ea3
-  Running setup.py bdist_wheel for absl-py: started
-  Running setup.py bdist_wheel for absl-py: finished with status &#39;done&#39;
-  Stored in directory: /root/.cache/pip/wheels/90/db/f8/2c3101f72ef1ad434e4662853174126ce30201a3e163dcbeca
-  Running setup.py bdist_wheel for termcolor: started
-  Running setup.py bdist_wheel for termcolor: finished with status &#39;done&#39;
-  Stored in directory: /root/.cache/pip/wheels/7c/06/54/bc84598ba1daf8f970247f550b175aaaee85f68b4b0c5ab2c6
-  Running setup.py bdist_wheel for gast: started
-  Running setup.py bdist_wheel for gast: finished with status &#39;done&#39;
-  Stored in directory: /root/.cache/pip/wheels/5c/2e/7e/a1d4d4fcebe6c381f378ce7743a3ced3699feb89bcfbdadadd
-  Running setup.py bdist_wheel for JsonSir: started
-  Running setup.py bdist_wheel for JsonSir: finished with status &#39;done&#39;
-  Stored in directory: /root/.cache/pip/wheels/ee/30/5c/3a3b5e1386c8db9a3be5f5c3933644ae0533c1351c6a8eb4b5
-  Running setup.py bdist_wheel for JsonForm: started
-  Running setup.py bdist_wheel for JsonForm: finished with status &#39;done&#39;
-  Stored in directory: /root/.cache/pip/wheels/e8/74/51/42c2d41c02bdc6f0e604476b7e4293b8c98d0bcbfa1dff78c8
-  Running setup.py bdist_wheel for pycparser: started
-  Running setup.py bdist_wheel for pycparser: finished with status &#39;done&#39;
-  Stored in directory: /root/.cache/pip/wheels/f2/9a/90/de94f8556265ddc9d9c8b271b0f63e57b26fb1d67a45564511
-Successfully built pathspec SecretStorage dill pyyaml tabulate futures antlr4-python3-runtime absl-py termcolor gast JsonSir JsonForm pycparser
-<span class="ansi-red-intense-fg">azure-cli-core 2.0.55 has requirement azure-mgmt-resource==2.0.0, but you&#39;ll have azure-mgmt-resource 2.1.0 which is incompatible.
-azureml-train-automl 1.0.8 has requirement numpy&lt;1.15.0,&gt;=1.11.0, but you&#39;ll have numpy 1.15.4 which is incompatible.
-</span>Installing collected packages: pyyaml, azure-nspkg, azure-cli-nspkg, humanfriendly, PyJWT, colorama, applicationinsights, portalocker, azure-cli-telemetry, jmespath, argcomplete, tabulate, knack, pycparser, cffi, asn1crypto, cryptography, idna, chardet, urllib3, requests, adal, isodate, oauthlib, requests-oauthlib, msrest, azure-common, msrestazure, azure-mgmt-resource, pyopenssl, bcrypt, pyasn1, pynacl, paramiko, futures, wheel, antlr4-python3-runtime, azure-cli-core, azure-storage-nspkg, azure-cli-command-modules-nspkg, azure-cli-profile, pathspec, contextlib2, pytz, SecretStorage, azure-mgmt-authorization, azure-mgmt-nspkg, azure-mgmt-keyvault, azure-storage-common, azure-storage-blob, docker-pycreds, websocket-client, docker, ndg-httpsclient, ruamel.yaml, azure-mgmt-containerregistry, backports.weakref, backports.tempfile, azure-mgmt-storage, azure-graphrbac, jsonpickle, azureml-core, azureml-telemetry, azureml-train-restclients-hyperdrive, azureml-train-core, azureml-train, azureml-pipeline-core, azureml-pipeline-steps, azureml-pipeline, keras-preprocessing, protobuf, markdown, grpcio, werkzeug, tensorboard, h5py, keras-applications, absl-py, astor, termcolor, gast, tensorflow, scikit-learn, pandas, lightgbm, JsonSir, JsonForm, python-easyconfig, resource, dill, azureml-dataprep-native, distro, dotnetcore2, azureml-dataprep, sklearn-pandas, azureml-train-automl, widgetsnbextension, ipywidgets, azureml-widgets, azureml-sdk
-  Found existing installation: wheel 0.32.3
-    Uninstalling wheel-0.32.3:
-      Successfully uninstalled wheel-0.32.3
-  Found existing installation: scikit-learn 0.20.1
-    Uninstalling scikit-learn-0.20.1:
-      Successfully uninstalled scikit-learn-0.20.1
-Successfully installed JsonForm-0.0.2 JsonSir-0.0.2 PyJWT-1.7.1 SecretStorage-2.3.1 absl-py-0.7.0 adal-1.2.0 antlr4-python3-runtime-4.7.2 applicationinsights-0.11.7 argcomplete-1.9.4 asn1crypto-0.24.0 astor-0.7.1 azure-cli-command-modules-nspkg-2.0.2 azure-cli-core-2.0.55 azure-cli-nspkg-3.0.3 azure-cli-profile-2.1.2 azure-cli-telemetry-1.0.0 azure-common-1.1.17 azure-graphrbac-0.53.0 azure-mgmt-authorization-0.51.1 azure-mgmt-containerregistry-2.6.0 azure-mgmt-keyvault-1.1.0 azure-mgmt-nspkg-3.0.2 azure-mgmt-resource-2.1.0 azure-mgmt-storage-3.1.1 azure-nspkg-3.0.2 azure-storage-blob-1.4.0 azure-storage-common-1.4.0 azure-storage-nspkg-3.1.0 azureml-core-1.0.8 azureml-dataprep-1.0.7 azureml-dataprep-native-11.2.1 azureml-pipeline-1.0.8 azureml-pipeline-core-1.0.8 azureml-pipeline-steps-1.0.8 azureml-sdk-1.0.8 azureml-telemetry-1.0.8 azureml-train-1.0.8 azureml-train-automl-1.0.8 azureml-train-core-1.0.8 azureml-train-restclients-hyperdrive-1.0.8 azureml-widgets-1.0.8 backports.tempfile-1.0 backports.weakref-1.0.post1 bcrypt-3.1.6 cffi-1.11.5 chardet-3.0.4 colorama-0.4.1 contextlib2-0.5.5 cryptography-2.5 dill-0.2.9 distro-1.3.0 docker-3.7.0 docker-pycreds-0.4.0 dotnetcore2-2.1.7 futures-3.1.1 gast-0.2.2 grpcio-1.18.0 h5py-2.9.0 humanfriendly-4.17 idna-2.8 ipywidgets-7.4.2 isodate-0.6.0 jmespath-0.9.3 jsonpickle-1.1 keras-applications-1.0.6 keras-preprocessing-1.0.5 knack-0.5.1 lightgbm-2.2.1 markdown-3.0.1 msrest-0.6.4 msrestazure-0.6.0 ndg-httpsclient-0.5.1 oauthlib-3.0.0 pandas-0.23.4 paramiko-2.4.2 pathspec-0.5.9 portalocker-1.2.1 protobuf-3.6.1 pyasn1-0.4.5 pycparser-2.19 pynacl-1.3.0 pyopenssl-19.0.0 python-easyconfig-0.1.7 pytz-2018.9 pyyaml-4.2b4 requests-2.21.0 requests-oauthlib-1.2.0 resource-0.2.1 ruamel.yaml-0.15.51 scikit-learn-0.19.1 sklearn-pandas-1.7.0 tabulate-0.8.2 tensorboard-1.12.2 tensorflow-1.12.0 termcolor-1.1.0 urllib3-1.23 websocket-client-0.54.0 werkzeug-0.14.1 wheel-0.30.0 widgetsnbextension-3.4.2
-Removing intermediate container a35ddee965d1
- ---&gt; 3ccecb1f0d90
-Step 9/10 : RUN [ &#34;/bin/bash&#34;,&#34;-c&#34;,&#34;source activate aml-sdk-conda-env &amp;&amp;                         jupyter nbextension install --py --user azureml.widgets  &amp;&amp;                         jupyter nbextension enable --py --user azureml.widgets&#34;]
- ---&gt; Running in 0e6a0b34e03a
-<span class="ansi-red-intense-fg">Installing /opt/conda/envs/aml-sdk-conda-env/lib/python3.6/site-packages/azureml/widgets/static -&gt; azureml_widgets
-</span><span class="ansi-red-intense-fg">Making directory: /root/.local/share/jupyter/nbextensions/azureml_widgets/
-</span><span class="ansi-red-intense-fg">Copying: /opt/conda/envs/aml-sdk-conda-env/lib/python3.6/site-packages/azureml/widgets/static/index.js -&gt; /root/.local/share/jupyter/nbextensions/azureml_widgets/index.js
-</span><span class="ansi-red-intense-fg">Copying: /opt/conda/envs/aml-sdk-conda-env/lib/python3.6/site-packages/azureml/widgets/static/extension.js -&gt; /root/.local/share/jupyter/nbextensions/azureml_widgets/extension.js
-</span><span class="ansi-red-intense-fg">Making directory: /root/.local/share/jupyter/nbextensions/azureml_widgets/packages
-</span><span class="ansi-red-intense-fg">Making directory: /root/.local/share/jupyter/nbextensions/azureml_widgets/packages/labextension
-</span><span class="ansi-red-intense-fg">Copying: /opt/conda/envs/aml-sdk-conda-env/lib/python3.6/site-packages/azureml/widgets/static/packages/labextension/azureml_widgets-1.0.0.tgz -&gt; /root/.local/share/jupyter/nbextensions/azureml_widgets/packages/labextension/azureml_widgets-1.0.0.tgz
-</span><span class="ansi-red-intense-fg">- Validating: </span><span class="ansi-green-fg">OK</span>
-<span class="ansi-red-intense-fg">
-    To initialize this nbextension in the browser every time the notebook (or other app) loads:
-    
-          jupyter nbextension enable azureml.widgets --user --py
-    
-</span><span class="ansi-red-intense-fg">Enabling notebook extension azureml_widgets/extension...
-</span><span class="ansi-red-intense-fg">      - Validating: </span><span class="ansi-green-fg">OK</span>
-Removing intermediate container 0e6a0b34e03a
- ---&gt; bba5d1c25339
-Step 10/10 : CMD [ &#34;/bin/bash&#34;,&#34;-c&#34;,&#34;source activate aml-sdk-conda-env&#34;]
- ---&gt; Running in 7b943a5f1ef2
+Removing intermediate container 765562d5b405
+ ---&gt; 4d7a69993612
+Step 8/12 : ENV CONDA_AUTO_UPDATE_CONDA=false
+ ---&gt; Running in 154dd9c01ea1
+Removing intermediate container 154dd9c01ea1
+ ---&gt; d19166545958
+Step 9/12 : ENV CONDA_DEFAULT_ENV=$CONDA_ENV_NAME
+ ---&gt; Running in 6787bbd82fe7
+Removing intermediate container 6787bbd82fe7
+ ---&gt; e397b0feed61
+Step 10/12 : ENV CONDA_PREFIX=$CONDA_DIR/envs/$CONDA_DEFAULT_ENV
+ ---&gt; Running in 5284728e3d7a
+Removing intermediate container 5284728e3d7a
+ ---&gt; 35c6fb1b0f07
+Step 11/12 : ENV PATH=$CONDA_PREFIX/bin:/opt/conda/bin:$PATH
+ ---&gt; Running in 96bc30f2ea89
+Removing intermediate container 96bc30f2ea89
+ ---&gt; 0286ffff4bde
+Step 12/12 : CMD /bin/bash
+ ---&gt; Running in 84097139c40c
+Removing intermediate container 84097139c40c
+ ---&gt; 6cf3c3e794cf
+Successfully built 6cf3c3e794cf
+Successfully tagged georgedockeraccount/aml-sdk_docker_image:sdk.v.1.0.15
 </pre>
 </div>
 </div>
@@ -12831,7 +12912,7 @@ Step 10/10 : CMD [ &#34;/bin/bash&#34;,&#34;-c&#34;,&#34;source activate aml-sdk
 </div>
 <div class="cell border-box-sizing code_cell rendered">
 <div class="input">
-<div class="prompt input_prompt">In&nbsp;[&nbsp;]:</div>
+<div class="prompt input_prompt">In&nbsp;[10]:</div>
 <div class="inner_cell">
     <div class="input_area">
 <div class=" highlight hl-ipython3"><pre><span></span><span class="n">local_dir</span> <span class="o">=</span> <span class="o">!</span>pwd
@@ -12847,10 +12928,41 @@ Step 10/10 : CMD [ &#34;/bin/bash&#34;,&#34;-c&#34;,&#34;source activate aml-sdk
 </div>
 </div>
 
+<div class="output_wrapper">
+<div class="output">
+
+
+<div class="output_area">
+
+<div class="prompt output_prompt">Out[10]:</div>
+
+
+
+
+<div class="output_text output_subarea output_execute_result">
+<pre>&#39;/datadrive01/prj/PowerAIWithDocker/amlsdk/docker_run_dir&#39;</pre>
+</div>
+
+</div>
+
+<div class="output_area">
+
+<div class="prompt"></div>
+
+
+<div class="output_subarea output_stream output_stdout output_text">
+<pre>total 0
+</pre>
+</div>
+</div>
+
+</div>
+</div>
+
 </div>
 <div class="cell border-box-sizing code_cell rendered">
 <div class="input">
-<div class="prompt input_prompt">In&nbsp;[&nbsp;]:</div>
+<div class="prompt input_prompt">In&nbsp;[11]:</div>
 <div class="inner_cell">
     <div class="input_area">
 <div class=" highlight hl-ipython3"><pre><span></span><span class="o">!</span>mkdir -p ./docker_history
@@ -12876,22 +12988,36 @@ Step 10/10 : CMD [ &#34;/bin/bash&#34;,&#34;-c&#34;,&#34;source activate aml-sdk
 <div class="inner_cell">
     <div class="input_area">
 <div class=" highlight hl-ipython3"><pre><span></span><span class="c1"># !docker login -u=$docker_login -p=</span>
+<span class="o">!</span>docker push <span class="nv">$docker_image_name</span>
 </pre></div>
 
 </div>
 </div>
 </div>
 
-</div>
-<div class="cell border-box-sizing code_cell rendered">
-<div class="input">
-<div class="prompt input_prompt">In&nbsp;[&nbsp;]:</div>
-<div class="inner_cell">
-    <div class="input_area">
-<div class=" highlight hl-ipython3"><pre><span></span><span class="o">!</span>docker push <span class="nv">$docker_image_name</span>
-</pre></div>
+<div class="output_wrapper">
+<div class="output">
 
+
+<div class="output_area">
+
+<div class="prompt"></div>
+
+
+<div class="output_subarea output_stream output_stdout output_text">
+<pre>The push refers to repository [docker.io/georgedockeraccount/aml-sdk_docker_image]
+
+b5e6b557: Preparing 
+e14c0d4c: Preparing 
+c2f12164: Preparing 
+6384d46a: Preparing 
+8fbc5764: Preparing 
+828fac1a: Preparing 
+ae060f2d: Preparing 
+b5e6b557: Pushing  485.3MB/2.406GBraccount/aml-sdk_docker K</pre>
 </div>
+</div>
+
 </div>
 </div>
 
@@ -12900,7 +13026,7 @@ Step 10/10 : CMD [ &#34;/bin/bash&#34;,&#34;-c&#34;,&#34;source activate aml-sdk
 </div>
 <div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<h3 id="To-run-aml-SDK,-ssh-into-a-vm,-run-the-command-below-and-then-go-to:">To run aml SDK, ssh into a vm, run the command below and then go to:<a class="anchor-link" href="#To-run-aml-SDK,-ssh-into-a-vm,-run-the-command-below-and-then-go-to:">&#182;</a></h3><p>ghiordanxrgpuvm.eastus2.cloudapp.azure.com:9001/</p>
+<h3 id="To-run-aml-SDK,-ssh-into-a-vm,-run-the-command-below-and-then-go-to:">To run aml SDK, ssh into a vm, run the command below and then go to:<a class="anchor-link" href="#To-run-aml-SDK,-ssh-into-a-vm,-run-the-command-below-and-then-go-to:">&#182;</a></h3><p>your_vm.eastus2.cloudapp.azure.com:9001/</p>
 <p>Make sure the host port (9001) is open in the VM.</p>
 
 </div>
@@ -12911,7 +13037,7 @@ Step 10/10 : CMD [ &#34;/bin/bash&#34;,&#34;-c&#34;,&#34;source activate aml-sdk
 <div class="prompt input_prompt">In&nbsp;[&nbsp;]:</div>
 <div class="inner_cell">
     <div class="input_area">
-<div class=" highlight hl-ipython3"><pre><span></span><span class="o">!</span><span class="nb">echo</span> docker run -it -p <span class="m">9001</span>:8888 -v <span class="k">$(</span><span class="nb">pwd</span><span class="k">)</span>/../:/workspace:rw <span class="nv">$docker_image_name</span> /bin/bash -c <span class="s1">&#39;&quot;source activate aml-sdk-conda-env &amp;&amp; jupyter notebook --notebook-dir=/workspace --ip=&#39;</span>*<span class="s1">&#39; --port=8888 --no-browser --allow-root&quot;&#39;</span>
+<div class=" highlight hl-ipython3"><pre><span></span><span class="o">!</span><span class="nb">echo</span> docker run -it -p <span class="m">9001</span>:8888 -v <span class="k">$(</span><span class="nb">pwd</span><span class="k">)</span>/../:/workspace:rw <span class="nv">$docker_image_name</span> /bin/bash -c <span class="s1">&#39;&quot;jupyter notebook --notebook-dir=/workspace --ip=&#39;</span>*<span class="s1">&#39; --port=8888 --no-browser --allow-root&quot;&#39;</span>
 </pre></div>
 
 </div>
@@ -12923,8 +13049,31 @@ Step 10/10 : CMD [ &#34;/bin/bash&#34;,&#34;-c&#34;,&#34;source activate aml-sdk
 </div>
 <div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<h3 id="Run-a-short-test">Run a short test<a class="anchor-link" href="#Run-a-short-test">&#182;</a></h3><p>Run ' import azureml.core; print("AML SDK version:", azureml.core.VERSION) ' in a notebook</p>
+<h3 id="Run-short-tests">Run short tests<a class="anchor-link" href="#Run-short-tests">&#182;</a></h3><p>Run ' import azureml.core; print("AML SDK version:", azureml.core.VERSION) ' in plain python and in a notebook.</p>
+<p>Compare the SDK version against latest AML SDK <a href="https://docs.microsoft.com/en-us/azure/machine-learning/service/azure-machine-learning-release-notes">relese notes</a></p>
 
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[&nbsp;]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="o">!</span><span class="nb">echo</span> docker run  <span class="nv">$docker_image_name</span> /bin/bash -c <span class="s2">&quot;python -c &#39;import azureml.core;print(azureml.core.VERSION)&#39;&quot;</span>
+<span class="o">!</span>docker run  <span class="nv">$docker_image_name</span> /bin/bash -c <span class="s2">&quot;python -c &#39;import azureml.core;print(azureml.core.VERSION)&#39;&quot;</span>
+</pre></div>
+
+</div>
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div>
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<h4 id="Do-the-same-in-a--notebook">Do the same in a  notebook<a class="anchor-link" href="#Do-the-same-in-a--notebook">&#182;</a></h4>
 </div>
 </div>
 </div>
@@ -13025,9 +13174,7 @@ Step 10/10 : CMD [ &#34;/bin/bash&#34;,&#34;-c&#34;,&#34;source activate aml-sdk
 </div>
 <div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<h3>Quick testing SDK docker image (see cell response "AML SDK version: <latest version>").</h3>
-<p>Compare the SDK version against latest AML SDK <a href="https://docs.microsoft.com/en-us/azure/machine-learning/service/azure-machine-learning-release-notes">relese notes</a></p>
-
+<h4 id="Run-the-notebook-and-see-the-new-SDK-version">Run the notebook and see the new SDK version<a class="anchor-link" href="#Run-the-notebook-and-see-the-new-SDK-version">&#182;</a></h4>
 </div>
 </div>
 </div>
@@ -13036,7 +13183,7 @@ Step 10/10 : CMD [ &#34;/bin/bash&#34;,&#34;-c&#34;,&#34;source activate aml-sdk
 <div class="prompt input_prompt">In&nbsp;[&nbsp;]:</div>
 <div class="inner_cell">
     <div class="input_area">
-<div class=" highlight hl-ipython3"><pre><span></span><span class="o">!</span>docker run -v <span class="nv">$crt_local_dir</span>:/workspace:rw <span class="nv">$docker_image_name</span> /bin/bash -c <span class="s2">&quot;source activate aml-sdk-conda-env &amp;&amp; jupyter kernelspec list &amp;&amp; jupyter nbconvert --ExecutePreprocessor.kernel_name=python3 --execute --to notebook  /workspace/test_aml_sdk_docker_image.ipynb&quot;</span>
+<div class=" highlight hl-ipython3"><pre><span></span><span class="o">!</span>docker run -v <span class="nv">$crt_local_dir</span>:/workspace:rw <span class="nv">$docker_image_name</span> /bin/bash -c <span class="s2">&quot;jupyter kernelspec list &amp;&amp; jupyter nbconvert --ExecutePreprocessor.kernel_name=python3 --execute --to notebook  /workspace/test_aml_sdk_docker_image.ipynb&quot;</span>
 </pre></div>
 
 </div>
