@@ -5,7 +5,7 @@ MAINTAINER George Iordanescu <ghiordan@microsoft.com>
 # basic system packages, plus gcc
 RUN apt-get update --fix-missing && apt-get install -y --no-install-recommends \
     gcc g++ \
-    wget bzip2 ca-certificates curl git && \
+    wget bzip2 apt-transport-https ca-certificates curl gnupg git && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/*
 
@@ -21,4 +21,13 @@ ENV CONDA_DEFAULT_ENV=$CONDA_ENV_NAME
 ENV CONDA_PREFIX=$CONDA_DIR/envs/$CONDA_DEFAULT_ENV
 ENV PATH=$CONDA_PREFIX/bin:/opt/conda/bin:$PATH         
 
+# Install Azure CLI
+ENV AZ_CLI_REPO=stretch   
+RUN echo "deb [arch=amd64] https://packages.microsoft.com/repos/azure-cli/ $AZ_CLI_REPO main" | \
+    tee /etc/apt/sources.list.d/azure-cli.list && \
+    curl -L https://packages.microsoft.com/keys/microsoft.asc | apt-key add - && \
+    apt-get update && \
+    apt-get install -y --no-install-recommends \
+    azure-cli        
+        
 CMD /bin/bash

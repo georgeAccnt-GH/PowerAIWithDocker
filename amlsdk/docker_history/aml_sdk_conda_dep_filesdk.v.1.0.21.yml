@@ -11,4 +11,4 @@ dependencies:
   - scikit-learn
   - pip:
     - python-dotenv
-    - azureml-sdk[notebooks,automl,explain] 
+    - azureml-sdk[notebooks,automl,explain]==1.0.21 
