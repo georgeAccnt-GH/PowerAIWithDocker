@@ -1,0 +1,56 @@
+
+# FROM continuumio/miniconda3:4.5.12 as AzureMLSDKOnly 
+FROM continuumio/miniconda3:4.6.14 as AzureMLSDKOnly    
+MAINTAINER George Iordanescu <ghiordan@microsoft.com>
+
+RUN apt-get update --fix-missing && apt-get install -y --no-install-recommends \
+    gcc g++ \
+    wget bzip2 \
+    curl apt-transport-https lsb-release gpg \
+    git make && \
+    apt-get clean && \
+    rm -rf /var/lib/apt/lists/*
+
+ADD aml_sdk_conda_dep_file.yml /tmp/aml_sdk_conda_dep_file.yml
+ENV CONDA_DIR /opt/conda
+ENV CONDA_ENV_NAME aml-sdk-conda-env    
+
+# reate aml sdk conda env defined by .yml file
+RUN /opt/conda/bin/conda env create -q --name $CONDA_ENV_NAME -f /tmp/aml_sdk_conda_dep_file.yml && \
+    /opt/conda/bin/conda clean  --yes --all 
+ENV CONDA_AUTO_UPDATE_CONDA=false
+ENV CONDA_DEFAULT_ENV=$CONDA_ENV_NAME
+ENV CONDA_PREFIX=$CONDA_DIR/envs/$CONDA_DEFAULT_ENV
+ENV PATH=$CONDA_PREFIX/bin:/opt/conda/bin:$PATH         
+
+FROM AzureMLSDKOnly as AzureMLSDKAndSudo
+ENV AML_USER azuremluser 
+RUN adduser --disabled-password --gecos '' $AML_USER && \
+    adduser $AML_USER sudo && \
+    echo '%sudo ALL=(ALL) NOPASSWD:ALL' >> /etc/sudoers && \
+    chown $AML_USER $CONDA_DIR -R 
+
+USER $AML_USER        
+        
+FROM AzureMLSDKOnly as AzureMLSDKAndAzCli
+# Install Azure CLI
+ENV AZ_CLI_REPO=stretch   
+RUN echo "deb [arch=amd64] https://packages.microsoft.com/repos/azure-cli/ $AZ_CLI_REPO main" | \
+    tee /etc/apt/sources.list.d/azure-cli.list && \
+    curl -L https://packages.microsoft.com/keys/microsoft.asc | apt-key add - && \
+    apt-get update && \
+    apt-get install -y --no-install-recommends \
+    azure-cli 
+    
+# Install AzCopy
+RUN mkdir -p /tmp/azcopy && mkdir -p /azcopy10 && \
+    wget -O /tmp/azcopy/azcopyv10.tar.gz https://aka.ms/downloadazcopy-v10-linux &&  \
+    tar -xf /tmp/azcopy/azcopyv10.tar.gz -C /azcopy10 
+RUN rm -rf /tmp/azcopy
+ENV PATH=/azcopy10/azcopy_linux_amd64_10.1.2:$PATH
+    
+FROM AzureMLSDKAndAzCli as AzureMLSDKAndAzCliAndAZDevOps
+#https://marketplace.visualstudio.com/items?itemName=ms-vsts.cli
+RUN az extension add --name azure-devops
+        
+CMD /bin/bash
