@@ -8,7 +8,7 @@ dependencies:
   - blas=1.0=mkl
   - bleach=3.1.0=py36_0
   - ca-certificates=2019.5.15=0
-  - certifi=2019.3.9=py36_0
+  - certifi=2019.6.16=py36_0
   - cython=0.29.10=py36he6710b0_0
   - decorator=4.4.0=py36_1
   - defusedxml=0.6.0=py_0

@@ -7,7 +7,8 @@ RUN apt-get update --fix-missing && apt-get install -y --no-install-recommends \
     gcc g++ \
     wget bzip2 \
     curl apt-transport-https lsb-release gpg \
-    git make && \
+    git make \
+    sudo && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/*
 
@@ -23,14 +24,14 @@ ENV CONDA_DEFAULT_ENV=$CONDA_ENV_NAME
 ENV CONDA_PREFIX=$CONDA_DIR/envs/$CONDA_DEFAULT_ENV
 ENV PATH=$CONDA_PREFIX/bin:/opt/conda/bin:$PATH         
 
-FROM AzureMLSDKOnly as AzureMLSDKAndSudo
-ENV AML_USER azuremluser 
-RUN adduser --disabled-password --gecos '' $AML_USER && \
-    adduser $AML_USER sudo && \
-    echo '%sudo ALL=(ALL) NOPASSWD:ALL' >> /etc/sudoers && \
-    chown $AML_USER $CONDA_DIR -R 
+# FROM AzureMLSDKOnly as AzureMLSDKAndSudo
+# ENV AML_USER azuremluser 
+# RUN adduser --disabled-password --gecos '' $AML_USER && \
+#     adduser $AML_USER sudo && \
+#     echo '%sudo ALL=(ALL) NOPASSWD:ALL' >> /etc/sudoers && \
+#     chown $AML_USER $CONDA_DIR -R 
 
-USER $AML_USER        
+# USER $AML_USER        
         
 FROM AzureMLSDKOnly as AzureMLSDKAndAzCli
 # Install Azure CLI
