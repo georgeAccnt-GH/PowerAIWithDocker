@@ -4,6 +4,7 @@ FROM continuumio/miniconda3:4.7.10 as AzureMLSDKOnly
 MAINTAINER George Iordanescu <ghiordan@microsoft.com>
 
 RUN apt-get update --fix-missing && apt-get install -y --no-install-recommends \
+    gpg-agent \
     gcc g++ \
     wget bzip2 \
     curl apt-transport-https lsb-release gpg \
